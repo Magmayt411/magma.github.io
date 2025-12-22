@@ -17,7 +17,6 @@
 
     *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color: transparent; }
     html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #eaf7ff; }
-
     body{
       overflow:hidden;
       background:
@@ -55,6 +54,7 @@
       backdrop-filter: blur(10px);
       box-shadow: 0 10px 25px var(--shadow);
       border: 1px solid rgba(207,239,255,.18);
+      flex-wrap:wrap;
     }
 
     .score{
@@ -63,11 +63,10 @@
       display:flex; align-items:baseline; gap:8px;
     }
     .score span{ color: var(--ice2); font-size: 22px; }
-
     .tiny{ opacity:.9; font-size:12px; letter-spacing:.2px; }
     .miss{ opacity:.95; font-size:12px; margin-left:8px; }
 
-    .btnRow{ display:flex; gap:10px; pointer-events:auto; }
+    .btnRow{ display:flex; gap:10px; pointer-events:auto; flex-wrap:wrap; justify-content:flex-end; }
     button{
       cursor:pointer;
       border:1px solid rgba(207,239,255,.22);
@@ -79,6 +78,7 @@
       box-shadow: 0 10px 25px var(--shadow);
       font-weight:600;
       transition: transform .12s ease, border-color .12s ease, background .12s ease, filter .12s ease, opacity .12s ease;
+      white-space:nowrap;
     }
     button:hover{ border-color: rgba(207,239,255,.35); transform: translateY(-1px); }
     button:active{ transform: translateY(0px); }
@@ -98,6 +98,8 @@
       backdrop-filter: blur(14px);
       padding:18px 18px 14px;
       pointer-events:auto;
+      position:relative;
+      overflow:hidden;
     }
 
     .title{
@@ -118,8 +120,8 @@
     .panel p{ margin:10px 0; line-height:1.45; opacity:.95; }
     .panel .big{ font-size:18px; font-weight:800; margin-top:4px; margin-bottom:10px; }
     .panel .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-
     .panel .actions button{ border-radius:14px; padding:12px 14px; }
+
     .primary{
       border-color: rgba(101,255,178,.35) !important;
       background: rgba(101,255,178,.12) !important;
@@ -140,7 +142,6 @@
       pointer-events:none;
     }
 
-    /* ======= МЕНЮ ШАХТ ======= */
     .grid{
       display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -151,7 +152,7 @@
       .grid{ grid-template-columns: 1fr; }
     }
 
-    .mine{
+    .cardBtn{
       position:relative;
       text-align:left;
       padding:14px 14px 12px;
@@ -161,26 +162,55 @@
       box-shadow: 0 14px 40px rgba(0,0,0,.35);
       overflow:hidden;
     }
-    .mine .topline{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
+
+    /* ✅ FIX: заголовки/чипы больше не вылезают */
+    .cardBtn .topline{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
       margin-bottom:8px;
     }
-    .mine .name{ font-weight:800; letter-spacing:.2px; }
-    .mine .sub{ font-size:12px; opacity:.85; }
-    .mine .lock{
+    .cardBtn .name{
+      font-weight:800;
+      letter-spacing:.2px;
+      flex: 1 1 auto;
+      min-width: 0;
+      line-height: 1.15;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+    }
+    .cardBtn .sub{ font-size:12px; opacity:.85; }
+
+    .chip{
       font-size:12px;
       padding:6px 10px;
       border-radius:999px;
       border:1px solid rgba(207,239,255,.18);
       background: rgba(207,239,255,.06);
-      opacity:.9;
-      transition: opacity .12s ease, transform .12s ease;
+      opacity:.95;
       white-space:nowrap;
+      flex: 0 0 auto;
+      max-width: 42%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: opacity .12s ease, transform .12s ease;
     }
-    .mine[disabled]{ cursor:not-allowed; filter: grayscale(.3); opacity:.85; }
-    .mine:hover{ border-color: rgba(207,239,255,.34); }
 
-    /* Эффект "легкий" + скрыть "доступно" при ховере */
+    @media (max-width: 420px){
+      .cardBtn{ padding:12px 12px 10px; }
+      .chip{ max-width: 46%; }
+    }
+    /* ✅ END FIX */
+
+    .cardBtn[disabled]{ cursor:not-allowed; filter: grayscale(.3); opacity:.85; }
+    .cardBtn:hover{ border-color: rgba(207,239,255,.34); }
+
+    /* mines easy hover */
     .mine.easy::before{
       content:"";
       position:absolute; inset:-80px;
@@ -193,10 +223,7 @@
       transition: opacity .18s ease, transform .18s ease;
       pointer-events:none;
     }
-    .mine.easy:hover::before{
-      opacity:1;
-      transform: scale(1.0);
-    }
+    .mine.easy:hover::before{ opacity:1; transform: scale(1.0); }
     .mine.easy::after{
       content:"ЛЕГКО";
       position:absolute;
@@ -213,13 +240,45 @@
       pointer-events:none;
     }
     .mine.easy:hover::after{ opacity:1; }
-
-    /* Вот это — чтобы "доступно" пропадало на наведении */
-    .mine.easy:hover .lock{
+    .mine.easy:hover .chip{
       opacity:0;
       transform: translateY(-2px) scale(.98);
       pointer-events:none;
     }
+
+    /* forest panel style */
+    .panel.forest{
+      background:
+        radial-gradient(600px 280px at 10% 10%, rgba(124, 255, 178, .10), transparent 60%),
+        radial-gradient(520px 280px at 90% 0%, rgba(255, 214, 120, .10), transparent 62%),
+        linear-gradient(180deg, rgba(10,32,18,.70), rgba(6,18,32,.55));
+      border-color: rgba(150, 255, 196, .18);
+    }
+    .panel.forest .badge{
+      border-color: rgba(150,255,196,.22);
+      background: rgba(150,255,196,.08);
+    }
+    .forestBtn{
+      border-color: rgba(150,255,196,.22);
+      background:
+        radial-gradient(420px 180px at 20% 0%, rgba(150,255,196,.10), transparent 62%),
+        radial-gradient(420px 180px at 90% 10%, rgba(255,214,120,.10), transparent 62%),
+        rgba(6,18,32,.30);
+    }
+    .forestBtn:hover{ border-color: rgba(150,255,196,.35); }
+    .forestBtn::before{
+      content:"";
+      position:absolute; inset:-80px;
+      background:
+        radial-gradient(520px 240px at 25% 15%, rgba(150,255,196,.18), transparent 62%),
+        radial-gradient(520px 260px at 85% 0%, rgba(255,214,120,.14), transparent 64%),
+        radial-gradient(520px 260px at 50% 110%, rgba(90,190,140,.10), transparent 70%);
+      opacity:0;
+      transform: scale(1.02);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events:none;
+    }
+    .forestBtn:hover::before{ opacity:1; transform: scale(1.0); }
 
     .toast{
       margin-top:10px;
@@ -236,6 +295,7 @@
 </head>
 <body>
   <div class="frost"></div>
+
   <div id="game">
     <canvas id="bg"></canvas>
     <canvas id="fx"></canvas>
@@ -247,93 +307,146 @@
       <div class="miss" id="misses">Промахи: 0/5</div>
       <div class="tiny" id="diff">Сложность: 1.00×</div>
     </div>
-
     <div class="btnRow">
-      <button id="pauseBtn" title="Пауза (P)">Пауза</button>
-      <button id="restartBtn" title="Рестарт (R)">Рестарт</button>
+      <button id="pauseBtn" title="P">Пауза</button>
+      <button id="restartBtn" title="R">Рестарт</button>
+      <button id="musicBtn" title="Музыка on/off">Музыка: ON</button>
+      <button id="sfxBtn" title="Звук on/off">Звук: ON</button>
     </div>
   </div>
 
   <div class="centerOverlay" id="overlay">
-    <!-- Главное меню (шахты) -->
-    <div class="panel" id="menuPanel">
+    <!-- MAIN -->
+    <div class="panel" id="mainPanel">
       <div class="title">
         <h1>ACT 4 Retriburion</h1>
-        <div class="badge">выбор шахты</div>
+        <div class="badge">работа</div>
       </div>
 
-      <p class="big">В какую шахту пойдем сегодня?</p>
-      <p class="tiny">уточни у Дани в какую можно идти.</p>
+      <p class="big">На какую работу пойдём сегодня?</p>
+      <p class="tiny">Выбирай направление — дальше откроется список локаций.</p>
 
       <div class="grid">
-        <button class="mine easy" id="mine1">
-          <div class="topline">
-            <div class="name">Ледяные шахты нортленда</div>
-            <div class="lock">доступно</div>
-          </div>
-          <div class="sub">Обычный режим. Камни ускоряются со счётом.</div>
+        <button class="cardBtn" id="goMines">
+          <div class="topline"><div class="name">Шахты</div></div>
+          <div class="sub">Камни, скорость, реакция. Лёд и хруст.</div>
         </button>
 
-        <button class="mine" id="mine2" disabled>
-          <div class="topline">
-            <div class="name">Шахта 2</div>
-            <div class="lock">🔒 скоро</div>
-          </div>
-          <div class="sub">Пока недоступно.</div>
-        </button>
-
-        <button class="mine" id="mine3" disabled>
-          <div class="topline">
-            <div class="name">Шахта 3</div>
-            <div class="lock">🔒 скоро</div>
-          </div>
-          <div class="sub">Пока недоступно.</div>
-        </button>
-
-        <button class="mine" id="mine4" disabled>
-          <div class="topline">
-            <div class="name">Шахта 4</div>
-            <div class="lock">🔒 скоро</div>
-          </div>
-          <div class="sub">Пока недоступно.</div>
-        </button>
-
-        <button class="mine" id="mine5" disabled>
-          <div class="topline">
-            <div class="name">Шахта 5</div>
-            <div class="lock">🔒 скоро</div>
-          </div>
-          <div class="sub">Пока недоступно.</div>
+        <button class="cardBtn forestBtn" id="goForest">
+          <div class="topline"><div class="name">Лесопилка</div></div>
+          <div class="sub">Дерево, топор и быстрые удары A/D.</div>
         </button>
       </div>
-
-      <div class="toast" id="toast">Этот уровень пока недоступен ❄️</div>
 
       <div class="actions">
         <button id="howBtn">Управление</button>
       </div>
     </div>
 
+    <!-- MINES MENU -->
+    <div class="panel hidden" id="minesPanel">
+      <div class="title">
+        <h1>ACT 4 Retriburion</h1>
+        <div class="badge">шахты</div>
+      </div>
+
+      <p class="big">В какую шахту пойдем сегодня?</p>
+      <p class="tiny">уточни у Дани в какую можно идти.</p>
+
+      <div class="grid">
+        <button class="cardBtn mine easy" id="mine1">
+          <div class="topline">
+            <div class="name">Ледяные шахты нортленда</div>
+            <div class="chip">доступно</div>
+          </div>
+          <div class="sub">Кликай по камням до того, как они исчезнут.</div>
+        </button>
+
+        <button class="cardBtn mine" id="mine2" disabled>
+          <div class="topline"><div class="name">Шахта 2</div><div class="chip">🔒 скоро</div></div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+        <button class="cardBtn mine" id="mine3" disabled>
+          <div class="topline"><div class="name">Шахта 3</div><div class="chip">🔒 скоро</div></div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+        <button class="cardBtn mine" id="mine4" disabled>
+          <div class="topline"><div class="name">Шахта 4</div><div class="chip">🔒 скоро</div></div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+        <button class="cardBtn mine" id="mine5" disabled>
+          <div class="topline"><div class="name">Шахта 5</div><div class="chip">🔒 скоро</div></div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+      </div>
+
+      <div class="toast" id="toastMines">Этот уровень пока недоступен ❄️</div>
+
+      <div class="actions">
+        <button id="backToMainFromMines">Назад</button>
+      </div>
+    </div>
+
+    <!-- FOREST MENU -->
+    <div class="panel forest hidden" id="forestPanel">
+      <div class="title">
+        <h1>ACT 4 Retriburion</h1>
+        <div class="badge">лесопилка</div>
+      </div>
+
+      <p class="big">Где будем рубить лес?</p>
+      <p class="tiny">Уточни у Дани куда можно идти.</p>
+
+      <div class="grid">
+        <button class="cardBtn forestBtn" id="forest1">
+          <div class="topline">
+            <div class="name">Лесопилка Нортленда</div>
+            <div class="chip">доступно</div>
+          </div>
+          <div class="sub">Топор слева/справа — жми A или D вовремя.</div>
+        </button>
+
+        <button class="cardBtn forestBtn" id="forest2" disabled>
+          <div class="topline"><div class="name">Лес 2</div><div class="chip">🔒 скоро</div></div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+
+        <button class="cardBtn forestBtn" id="forest3" disabled>
+          <div class="topline"><div class="name">Лес 3</div><div class="chip">🔒 скоро</div></div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+      </div>
+
+      <div class="toast" id="toastForest">Этот маршрут пока недоступен 🌲</div>
+
+      <div class="actions">
+        <button id="backToMainFromForest">Назад</button>
+      </div>
+    </div>
+
+    <!-- HOW -->
     <div class="panel hidden" id="howPanel">
       <div class="title">
         <h1>Управление</h1>
         <div class="badge">подсказка</div>
       </div>
-      <p>🖱️ Клик по камню — сломать.</p>
-      <p>❌ <b>5 промахов подряд</b> (клик мимо камня) — поражение: <b>«Слишком много промахов»</b>.</p>
-      <p>⌨️ <b>P</b> — пауза, <b>R</b> — рестарт, <b>Space</b> — начать/продолжить.</p>
+      <p><b>Шахты:</b> 🖱️ кликай по камням. 5 промахов подряд — поражение.</p>
+      <p><b>Лесопилка:</b> ⌨️ жми <b>A</b> (удар слева) или <b>D</b> (удар справа) — пока есть время.</p>
+      <p>⌨️ <b>P</b> — пауза, <b>R</b> — рестарт, <b>Esc</b> — в меню.</p>
       <div class="actions">
         <button class="primary" id="backBtn">Назад</button>
       </div>
     </div>
 
+    <!-- LOSE -->
     <div class="panel hidden" id="losePanel">
       <div class="title">
-        <h1 id="loseTitle">Поражение ❄️</h1>
+        <h1>Поражение ❄️</h1>
         <div class="badge" id="finalBadge">счёт: 0</div>
       </div>
-      <p class="big" id="loseReason">Камень исчез раньше, чем ты его сломал.</p>
-      <p class="tiny" id="mineLine"></p>
+      <p class="big" id="loseReason">—</p>
+      <p class="tiny" id="jobLine"></p>
+      <p class="tiny" id="locLine"></p>
       <p id="statsLine" class="tiny"></p>
       <div class="actions">
         <button class="primary" id="againBtn">Ещё раз</button>
@@ -341,12 +454,13 @@
       </div>
     </div>
 
+    <!-- PAUSE -->
     <div class="panel hidden" id="pausePanel">
       <div class="title">
         <h1>Пауза</h1>
         <div class="badge">нажми P</div>
       </div>
-      <p>Отдохни секундочку. 🙂</p>
+      <p>Отдохни секундочку 🙂</p>
       <div class="actions">
         <button class="primary" id="resumeBtn">Продолжить</button>
         <button class="danger" id="pauseRestartBtn">Рестарт</button>
@@ -354,11 +468,11 @@
     </div>
   </div>
 
-  <div class="footerHint">Подсказка: промахи подряд убивают — кликай точнее ❄️</div>
+  <div class="footerHint" id="footerHint">Выбери работу: шахты или лесопилка.</div>
 
   <script>
     (() => {
-      // ===== Canvas setup =====
+      // ---------- DOM ----------
       const bg = document.getElementById('bg');
       const fx = document.getElementById('fx');
       const bctx = bg.getContext('2d');
@@ -367,21 +481,44 @@
       const scoreEl = document.getElementById('score');
       const diffEl = document.getElementById('diff');
       const missesEl = document.getElementById('misses');
+      const footerHint = document.getElementById('footerHint');
 
       const overlay = document.getElementById('overlay');
-      const menuPanel = document.getElementById('menuPanel');
+
+      const mainPanel = document.getElementById('mainPanel');
+      const minesPanel = document.getElementById('minesPanel');
+      const forestPanel = document.getElementById('forestPanel');
       const howPanel = document.getElementById('howPanel');
       const losePanel = document.getElementById('losePanel');
       const pausePanel = document.getElementById('pausePanel');
 
-      const loseReasonEl = document.getElementById('loseReason');
-      const loseTitleEl = document.getElementById('loseTitle');
-      const finalBadge = document.getElementById('finalBadge');
-      const statsLine = document.getElementById('statsLine');
-      const mineLine = document.getElementById('mineLine');
+      const goMines = document.getElementById('goMines');
+      const goForest = document.getElementById('goForest');
+
+      const backToMainFromMines = document.getElementById('backToMainFromMines');
+      const backToMainFromForest = document.getElementById('backToMainFromForest');
 
       const howBtn = document.getElementById('howBtn');
       const backBtn = document.getElementById('backBtn');
+
+      const mine1 = document.getElementById('mine1');
+      const mine2 = document.getElementById('mine2');
+      const mine3 = document.getElementById('mine3');
+      const mine4 = document.getElementById('mine4');
+      const mine5 = document.getElementById('mine5');
+
+      const forest1 = document.getElementById('forest1');
+      const forest2 = document.getElementById('forest2');
+      const forest3 = document.getElementById('forest3');
+
+      const toastMines = document.getElementById('toastMines');
+      const toastForest = document.getElementById('toastForest');
+
+      const loseReasonEl = document.getElementById('loseReason');
+      const finalBadge = document.getElementById('finalBadge');
+      const statsLine = document.getElementById('statsLine');
+      const jobLine = document.getElementById('jobLine');
+      const locLine = document.getElementById('locLine');
 
       const againBtn = document.getElementById('againBtn');
       const toMenuBtn = document.getElementById('toMenuBtn');
@@ -391,17 +528,242 @@
       const resumeBtn = document.getElementById('resumeBtn');
       const pauseRestartBtn = document.getElementById('pauseRestartBtn');
 
-      const mine1 = document.getElementById('mine1');
-      const mine2 = document.getElementById('mine2');
-      const mine3 = document.getElementById('mine3');
-      const mine4 = document.getElementById('mine4');
-      const mine5 = document.getElementById('mine5');
-      const toast = document.getElementById('toast');
+      const musicBtn = document.getElementById('musicBtn');
+      const sfxBtn = document.getElementById('sfxBtn');
 
+      // ---------- Utils ----------
       const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
       let W = 0, H = 0, dpr = DPR();
 
-      function resize() {
+      const rand = (a,b)=> Math.random()*(b-a)+a;
+      const clamp01 = (v)=> Math.max(0, Math.min(1, v));
+      const easeIn = (t)=> t*t;
+      const easeOut = (t)=> 1 - (1-t)*(1-t);
+      const easeInOut = (t)=> t<0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+
+      function roundRectPath(ctx, x, y, w, h, r){
+        r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+        ctx.beginPath();
+        ctx.moveTo(x+r, y);
+        ctx.lineTo(x+w-r, y);
+        ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+        ctx.lineTo(x+w, y+h-r);
+        ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+        ctx.lineTo(x+r, y+h);
+        ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+        ctx.lineTo(x, y+r);
+        ctx.quadraticCurveTo(x, y, x+r, y);
+        ctx.closePath();
+      }
+
+      // ===== AUDIO (WebAudio, без файлов) =====
+      let audioCtx = null;
+      let master = null;
+      let musicGain = null;
+      let sfxGain = null;
+      let musicOn = true;
+      let sfxOn = true;
+
+      let musicTimer = null;
+
+      function ensureAudio(){
+        if (audioCtx) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+
+        master = audioCtx.createGain();
+        master.gain.value = 0.55;
+
+        musicGain = audioCtx.createGain();
+        musicGain.gain.value = 0.18;
+
+        sfxGain = audioCtx.createGain();
+        sfxGain.gain.value = 0.85;
+
+        musicGain.connect(master);
+        sfxGain.connect(master);
+        master.connect(audioCtx.destination);
+      }
+
+      async function resumeAudio(){
+        ensureAudio();
+        if (audioCtx.state !== 'running') {
+          try { await audioCtx.resume(); } catch {}
+        }
+      }
+
+      function clickNoise(duration=0.03){
+        const buffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * duration), audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for(let i=0;i<data.length;i++){
+          data[i] = (Math.random()*2-1) * (1 - i/data.length);
+        }
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        return src;
+      }
+
+      function playRockHit(intensity=1){
+        if(!sfxOn) return;
+        ensureAudio();
+        const t = audioCtx.currentTime;
+
+        const n = clickNoise(0.06);
+        const bp = audioCtx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(1800 + 700*intensity, t);
+        bp.Q.setValueAtTime(9, t);
+
+        const hp = audioCtx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(900, t);
+
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.55*intensity, t+0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+0.10);
+
+        n.connect(bp);
+        bp.connect(hp);
+        hp.connect(g);
+        g.connect(sfxGain);
+
+        n.start(t);
+        n.stop(t+0.12);
+      }
+
+      function playWoodHit(intensity=1){
+        if(!sfxOn) return;
+        ensureAudio();
+        const t = audioCtx.currentTime;
+
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140 + 40*intensity, t);
+        osc.frequency.exponentialRampToValueAtTime(70, t+0.08);
+
+        const og = audioCtx.createGain();
+        og.gain.setValueAtTime(0.0001, t);
+        og.gain.exponentialRampToValueAtTime(0.55*intensity, t+0.006);
+        og.gain.exponentialRampToValueAtTime(0.0001, t+0.12);
+
+        const n = clickNoise(0.04);
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(1200 + 300*intensity, t);
+        lp.Q.setValueAtTime(0.8, t);
+
+        const ng = audioCtx.createGain();
+        ng.gain.setValueAtTime(0.0001, t);
+        ng.gain.exponentialRampToValueAtTime(0.25*intensity, t+0.005);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t+0.08);
+
+        osc.connect(og);
+        og.connect(sfxGain);
+
+        n.connect(lp);
+        lp.connect(ng);
+        ng.connect(sfxGain);
+
+        osc.start(t);
+        osc.stop(t+0.14);
+
+        n.start(t);
+        n.stop(t+0.10);
+      }
+
+      function stopMusic(){
+        if(musicTimer){
+          clearInterval(musicTimer);
+          musicTimer = null;
+        }
+      }
+
+      function playSynthNote(freq, dur=0.08, vol=0.08){
+        const t = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        const lp = audioCtx.createBiquadFilter();
+
+        o.type = (mode === 'forest') ? 'triangle' : 'sine';
+        o.frequency.setValueAtTime(freq, t);
+
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime((mode === 'forest') ? 2200 : 1600, t);
+        lp.Q.setValueAtTime(0.6, t);
+
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+
+        o.connect(lp);
+        lp.connect(g);
+        g.connect(musicGain);
+
+        o.start(t);
+        o.stop(t+dur+0.02);
+      }
+
+      function playPerc(dur=0.03){
+        const t = audioCtx.currentTime;
+        const n = clickNoise(dur);
+        const bp = audioCtx.createBiquadFilter();
+        bp.type='bandpass';
+        bp.frequency.setValueAtTime((mode === 'forest') ? 900 : 1400, t);
+        bp.Q.setValueAtTime(6, t);
+
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.06, t+0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+
+        n.connect(bp);
+        bp.connect(g);
+        g.connect(musicGain);
+
+        n.start(t);
+        n.stop(t+dur+0.01);
+      }
+
+      function startMusic(){
+        if(!musicOn) return;
+        ensureAudio();
+        stopMusic();
+
+        const bpmBase = 84;
+        const bpm = Math.min(150, bpmBase + difficulty*9);
+        const stepMs = 60000 / bpm / 2;
+
+        musicTimer = setInterval(()=>{
+          if(!musicOn || !audioCtx || audioCtx.state !== 'running') return;
+
+          const scale = (mode === 'forest')
+            ? [0, 2, 4, 7, 9]
+            : [0, 3, 5, 7, 10];
+
+          const root = (mode === 'forest') ? 220 : 196;
+          const step = (Date.now() / stepMs) | 0;
+
+          if(step % 4 === 0){
+            playSynthNote(root/2, 0.10, 0.10);
+          }
+
+          const density = clamp01((difficulty-1)/6);
+          if(Math.random() < 0.35 + density*0.45){
+            const deg = scale[(Math.random()*scale.length)|0];
+            const octave = (Math.random() < 0.7) ? 1 : 2;
+            const freq = root * Math.pow(2, octave) * Math.pow(2, deg/12);
+            playSynthNote(freq, 0.06, 0.08);
+          }
+
+          if(Math.random() < 0.18 + density*0.25){
+            playPerc(0.035);
+          }
+        }, stepMs);
+      }
+
+      // ---------- Resize ----------
+      function resize(){
         dpr = DPR();
         W = Math.floor(window.innerWidth);
         H = Math.floor(window.innerHeight);
@@ -413,35 +775,32 @@
         }
         bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        initSnow();
+        initLeaves();
       }
-      window.addEventListener('resize', resize, { passive: true });
-      resize();
+      window.addEventListener('resize', resize, { passive:true });
 
-      // ===== Background snow =====
+      // ---------- Background snow ----------
       const flakes = [];
       const FLAKES = 140;
 
-      function rand(min, max) { return Math.random() * (max - min) + min; }
-
-      function initSnow() {
+      function initSnow(){
         flakes.length = 0;
-        for (let i = 0; i < FLAKES; i++) {
+        for(let i=0;i<FLAKES;i++){
           flakes.push({
-            x: rand(0, W),
-            y: rand(0, H),
-            r: rand(0.8, 2.4),
-            vx: rand(-0.25, 0.25),
-            vy: rand(0.6, 1.6),
-            wob: rand(0, Math.PI * 2),
-            wobSpd: rand(0.006, 0.018),
-            alpha: rand(0.25, 0.85)
+            x: rand(0,W), y: rand(0,H),
+            r: rand(0.8,2.4),
+            vx: rand(-0.25,0.25),
+            vy: rand(0.6,1.6),
+            wob: rand(0,Math.PI*2),
+            wobSpd: rand(0.006,0.018),
+            a: rand(0.25,0.85)
           });
         }
       }
-      initSnow();
 
-      function drawBackground() {
-        bctx.clearRect(0, 0, W, H);
+      function drawBackgroundBase(){
+        bctx.clearRect(0,0,W,H);
 
         const g = bctx.createRadialGradient(W*0.35, H*0.15, 10, W*0.35, H*0.15, Math.max(W,H)*0.8);
         g.addColorStop(0, 'rgba(159,216,255,0.18)');
@@ -449,9 +808,9 @@
         bctx.fillStyle = g;
         bctx.fillRect(0,0,W,H);
 
-        for (const f of flakes) {
+        for(const f of flakes){
           f.wob += f.wobSpd;
-          f.x += f.vx + Math.sin(f.wob) * 0.25;
+          f.x += f.vx + Math.sin(f.wob)*0.25;
           f.y += f.vy;
 
           if (f.y > H + 10) { f.y = -10; f.x = rand(0, W); }
@@ -460,95 +819,147 @@
 
           bctx.beginPath();
           bctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-          bctx.fillStyle = `rgba(207,239,255,${f.alpha})`;
+          bctx.fillStyle = `rgba(207,239,255,${f.a})`;
           bctx.fill();
         }
       }
 
-      // ===== Game state =====
-      let running = false;
-      let paused = false;
-      let lost = false;
+      // ---------- Forest leaves ----------
+      const leaves = [];
+      const LEAVES = 55;
 
-      let score = 0;
-      let difficulty = 1;
-      let spawnTimer = 0;
-      let nextSpawn = 900;
-
-      let lastTime = performance.now();
-      let rocks = [];
-      let particles = [];
-
-      // промахи подряд
-      const MAX_MISSES = 5;
-      let missesStreak = 0;
-
-      // текущая шахта (для вывода в конце)
-      let currentMineName = '—';
-
-      // статистика
-      let spawned = 0;
-      let smashed = 0;
-
-      function updateMissesUI() {
-        missesEl.textContent = `Промахи: ${missesStreak}/${MAX_MISSES}`;
-        if (missesStreak >= 3) missesEl.style.color = 'rgba(255,107,107,.95)';
-        else missesEl.style.color = 'rgba(234,247,255,.95)';
-      }
-
-      function resetGame() {
-        running = true;
-        paused = false;
-        lost = false;
-        score = 0;
-        difficulty = 1;
-        spawnTimer = 0;
-        nextSpawn = 900;
-
-        rocks = [];
-        particles = [];
-        spawned = 0;
-        smashed = 0;
-
-        missesStreak = 0;
-        updateMissesUI();
-
-        scoreEl.textContent = score;
-        diffEl.textContent = `Сложность: ${difficulty.toFixed(2)}×`;
-
-        hideAllPanels();
-        overlay.classList.add('hidden');
-        toast.classList.remove('show');
-      }
-
-      function lose(type = 'miss_rock') {
-        running = false;
-        paused = false;
-        lost = true;
-
-        if (type === 'miss_clicks') {
-          loseReasonEl.textContent = 'Слишком много промахов.';
-        } else {
-          loseReasonEl.textContent = 'Камень исчез раньше, чем ты его сломал.';
+      function initLeaves(){
+        leaves.length = 0;
+        for(let i=0;i<LEAVES;i++){
+          leaves.push({
+            x: rand(0,W),
+            y: rand(-H, H),
+            s: rand(0.65,1.25),
+            vx: rand(-0.25,0.25),
+            vy: rand(0.35,0.95),
+            rot: rand(0,Math.PI*2),
+            rotSpd: rand(-0.02,0.02),
+            wob: rand(0,Math.PI*2),
+            wobSpd: rand(0.008,0.02),
+            alpha: rand(0.35,0.85),
+            hue: rand(85,130),
+            hue2: rand(35,70)
+          });
         }
+      }
 
-        mineLine.textContent = `Шахта: ${currentMineName}`;
-        finalBadge.textContent = `счёт: ${score}`;
+      function drawLeaves(){
+        for(const L of leaves){
+          L.wob += L.wobSpd;
+          L.rot += L.rotSpd;
+          L.x += L.vx + Math.sin(L.wob)*0.35;
+          L.y += L.vy;
 
-        const acc = spawned ? Math.round((smashed / spawned) * 100) : 0;
-        statsLine.textContent = `Камней: ${spawned}, сломано: ${smashed} (${acc}%).`;
+          if (L.y > H + 40) { L.y = rand(-120,-20); L.x = rand(0,W); }
+          if (L.x < -60) L.x = W + 60;
+          if (L.x > W + 60) L.x = -60;
 
+          const w = 10*L.s, h = 16*L.s;
+
+          fctx.save();
+          fctx.translate(L.x, L.y);
+          fctx.rotate(L.rot);
+
+          const g = fctx.createLinearGradient(-w, -h, w, h);
+          g.addColorStop(0, `hsla(${L.hue},70%,55%,${0.85*L.alpha})`);
+          g.addColorStop(1, `hsla(${L.hue2},80%,55%,${0.65*L.alpha})`);
+
+          fctx.fillStyle = g;
+          fctx.beginPath();
+          fctx.moveTo(0, -h);
+          fctx.quadraticCurveTo(w, -h*0.2, w*0.6, h*0.75);
+          fctx.quadraticCurveTo(0, h, -w*0.6, h*0.75);
+          fctx.quadraticCurveTo(-w, -h*0.2, 0, -h);
+          fctx.closePath();
+          fctx.fill();
+
+          fctx.strokeStyle = `rgba(255,255,255,${0.10*L.alpha})`;
+          fctx.lineWidth = 1;
+          fctx.beginPath();
+          fctx.moveTo(0, -h*0.85);
+          fctx.lineTo(0, h*0.85);
+          fctx.stroke();
+
+          fctx.restore();
+        }
+      }
+
+      // ---------- Game state ----------
+      let running=false, paused=false, lost=false;
+      let mode='mines';
+
+      let score=0, difficulty=1;
+      let lastTime = performance.now();
+
+      const MAX_MISSES=5;
+      let missesStreak=0;
+
+      let currentJobName='—';
+      let currentLocationName='—';
+
+      let spawned=0, smashed=0;
+      let particles=[];
+
+      function updateMissesUI(){
+        missesEl.textContent = `Промахи: ${missesStreak}/${MAX_MISSES}`;
+        missesEl.style.color = (missesStreak>=3) ? 'rgba(255,107,107,.95)' : 'rgba(234,247,255,.95)';
+      }
+
+      function computeDifficulty(){
+        difficulty = 1 + Math.pow(score/12, 1.15);
+        diffEl.textContent = `Сложность: ${difficulty.toFixed(2)}×`;
+      }
+
+      function hideAllPanels(){
+        mainPanel.classList.add('hidden');
+        minesPanel.classList.add('hidden');
+        forestPanel.classList.add('hidden');
+        howPanel.classList.add('hidden');
+        losePanel.classList.add('hidden');
+        pausePanel.classList.add('hidden');
+      }
+
+      function showToast(el, msg){
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._t);
+        el._t = setTimeout(()=> el.classList.remove('show'), 1300);
+      }
+
+      function showMainMenu(){
+        running=false; paused=false; lost=false;
         hideAllPanels();
         overlay.classList.remove('hidden');
-        losePanel.classList.remove('hidden');
+        mainPanel.classList.remove('hidden');
+        footerHint.textContent = 'Выбери работу: шахты или лесопилка.';
       }
 
-      function togglePause(force) {
-        if (!running && !paused) return;
-        const to = (typeof force === 'boolean') ? force : !paused;
-        paused = to;
+      function showMinesMenu(){
+        running=false; paused=false; lost=false;
+        hideAllPanels();
+        overlay.classList.remove('hidden');
+        minesPanel.classList.remove('hidden');
+        footerHint.textContent = 'Подсказка: промахи подряд убивают — кликай точнее ❄️';
+      }
 
-        if (paused) {
+      function showForestMenu(){
+        running=false; paused=false; lost=false;
+        hideAllPanels();
+        overlay.classList.remove('hidden');
+        forestPanel.classList.remove('hidden');
+        footerHint.textContent = 'Подсказка: слева A, справа D — бей быстро 🌲';
+      }
+
+      function togglePause(force){
+        if (!running && !paused) return;
+        paused = (typeof force === 'boolean') ? force : !paused;
+
+        if (paused){
           hideAllPanels();
           overlay.classList.remove('hidden');
           pausePanel.classList.remove('hidden');
@@ -558,81 +969,154 @@
         }
       }
 
-      function showMenu() {
-        running = false;
-        paused = false;
-        lost = false;
+      function lose(reason){
+        running=false; paused=false; lost=true;
+
+        if (reason==='miss_clicks') loseReasonEl.textContent = 'Слишком много промахов.';
+        else if (reason==='miss_rock') loseReasonEl.textContent = 'Камень исчез раньше, чем ты его сломал.';
+        else if (reason==='wood_timeout') loseReasonEl.textContent = 'Не успел ударить вовремя.';
+        else if (reason==='wood_wrong') loseReasonEl.textContent = 'Неверный удар. Нужно было с другой стороны.';
+        else loseReasonEl.textContent = 'Поражение.';
+
+        jobLine.textContent = `Работа: ${currentJobName}`;
+        locLine.textContent = `Локация: ${currentLocationName}`;
+        finalBadge.textContent = `счёт: ${score}`;
+
+        const acc = spawned ? Math.round((smashed/spawned)*100) : 0;
+        statsLine.textContent = (mode==='mines')
+          ? `Камней: ${spawned}, сломано: ${smashed} (${acc}%).`
+          : `Ударов: ${smashed}, темп: ${difficulty.toFixed(2)}×`;
+
         hideAllPanels();
         overlay.classList.remove('hidden');
-        menuPanel.classList.remove('hidden');
-        toast.classList.remove('show');
+        losePanel.classList.remove('hidden');
       }
 
-      function hideAllPanels() {
-        menuPanel.classList.add('hidden');
-        howPanel.classList.add('hidden');
-        losePanel.classList.add('hidden');
-        pausePanel.classList.add('hidden');
+      function resetCommon(){
+        running=true; paused=false; lost=false;
+        score=0; difficulty=1;
+        missesStreak=0;
+        updateMissesUI();
+
+        spawned=0; smashed=0;
+        particles=[];
+
+        scoreEl.textContent = score;
+        computeDifficulty();
+
+        hideAllPanels();
+        overlay.classList.add('hidden');
+
+        if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
       }
 
-      function showToast(msg) {
-        toast.textContent = msg;
-        toast.classList.add('show');
-        window.clearTimeout(showToast._t);
-        showToast._t = window.setTimeout(() => toast.classList.remove('show'), 1300);
-      }
+      // ---------- Mines game ----------
+      let rocks=[];
+      let spawnTimer=0;
+      let nextSpawn=900;
 
-      // ===== Difficulty =====
-      function computeDifficulty() {
-        difficulty = 1 + Math.pow(score / 12, 1.15);
-        diffEl.textContent = `Сложность: ${difficulty.toFixed(2)}×`;
-      }
-
-      function scheduleNextSpawn() {
-        const base = 950;
-        const min = 260;
-        const interval = Math.max(min, base / (0.85 + difficulty * 0.75));
+      function scheduleNextSpawn(){
+        const base=950, min=260;
+        const interval = Math.max(min, base/(0.85 + difficulty*0.75));
         nextSpawn = interval + rand(-60, 90);
       }
 
-      function rockLifetime() {
-        const base = 1050;
-        const min = 360;
-        const life = Math.max(min, base / (0.85 + difficulty * 0.9));
+      function rockLifetime(){
+        const base=1050, min=360;
+        const life = Math.max(min, base/(0.85 + difficulty*0.9));
         return life + rand(-40, 70);
       }
 
-      // ===== Rocks =====
-      function cryptoRandomId() {
-        return Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
-      }
-
-      function spawnRock() {
-        const size = rand(36, 64) * (0.98 + Math.min(0.35, score/80));
-        const x = rand(size, W - size);
-        const y = rand(size + 60, H - size - 30);
-
+      function spawnRock(){
+        const size = rand(36,64)*(0.98 + Math.min(0.35, score/80));
+        const x = rand(size, W-size);
+        const y = rand(size+60, H-size-30);
         rocks.push({
-          x, y,
-          r: size / 2,
+          x,y,r:size/2,
           born: performance.now(),
           life: rockLifetime(),
-          hp: 1,
-          wob: rand(0, Math.PI * 2),
-          wobSpd: rand(0.006, 0.02),
-          crack: 0,
-          id: cryptoRandomId()
+          wob: rand(0,Math.PI*2),
+          wobSpd: rand(0.006,0.02),
+          crack:0
         });
-
         spawned++;
       }
 
-      function hitRock(mx, my) {
-        for (let i = rocks.length - 1; i >= 0; i--) {
-          const r = rocks[i];
-          const dx = mx - r.x;
-          const dy = my - r.y;
-          if (dx*dx + dy*dy <= r.r*r.r) {
+      function drawRock(r, now){
+        const age = now - r.born;
+        const k = Math.min(1, age/r.life);
+        const alpha = 1 - Math.max(0,(k-0.85)/0.15)*0.75;
+        const danger = k>0.78;
+
+        r.wob += r.wobSpd;
+        r.crack = Math.min(1, age/r.life);
+
+        const rr = r.r*(1 + Math.sin(r.wob)*0.02);
+
+        const points=11, ang0=r.wob;
+        fctx.beginPath();
+        for(let i=0;i<=points;i++){
+          const a = ang0 + (i/points)*Math.PI*2;
+          const wob = 0.14*Math.sin(a*3 + ang0*4) + 0.08*Math.cos(a*5 - ang0*3);
+          const rad = rr*(1+wob);
+          const px = r.x + Math.cos(a)*rad;
+          const py = r.y + Math.sin(a)*rad;
+          if(i===0) fctx.moveTo(px,py); else fctx.lineTo(px,py);
+        }
+        fctx.closePath();
+
+        fctx.save();
+        fctx.shadowColor='rgba(0,0,0,0.35)';
+        fctx.shadowBlur=18;
+        fctx.shadowOffsetY=10;
+        fctx.fillStyle=`rgba(6,18,32,${0.22*alpha})`;
+        fctx.fill();
+        fctx.restore();
+
+        const grad = fctx.createRadialGradient(r.x-rr*0.25, r.y-rr*0.35, rr*0.2, r.x, r.y, rr*1.2);
+        grad.addColorStop(0, `rgba(207,239,255,${0.95*alpha})`);
+        grad.addColorStop(0.55, `rgba(159,216,255,${0.55*alpha})`);
+        grad.addColorStop(1, `rgba(20,70,100,${0.45*alpha})`);
+        fctx.fillStyle=grad;
+        fctx.fill();
+
+        fctx.lineWidth=2;
+        fctx.strokeStyle=`rgba(207,239,255,${0.35*alpha})`;
+        fctx.stroke();
+
+        if(r.crack>0){
+          fctx.beginPath();
+          const len = rr*(0.4 + r.crack*0.8);
+          const a = ang0 + now*0.002;
+          fctx.moveTo(r.x - Math.cos(a)*len*0.2, r.y - Math.sin(a)*len*0.2);
+          fctx.lineTo(r.x + Math.cos(a)*len, r.y + Math.sin(a)*len);
+          fctx.lineWidth=1.5;
+          fctx.strokeStyle=`rgba(234,247,255,${0.55*alpha})`;
+          fctx.stroke();
+        }
+
+        const start = -Math.PI/2;
+        fctx.beginPath();
+        fctx.arc(r.x, r.y, rr*0.72, start, start + Math.PI*2*(1-k));
+        fctx.lineWidth=3;
+        fctx.strokeStyle = danger ? 'rgba(255,107,107,0.75)' : 'rgba(101,255,178,0.6)';
+        fctx.stroke();
+
+        if(danger){
+          fctx.beginPath();
+          fctx.arc(r.x, r.y, rr*1.06, 0, Math.PI*2);
+          fctx.lineWidth=2;
+          fctx.strokeStyle=`rgba(255,107,107,${0.55*alpha})`;
+          fctx.stroke();
+        }
+        return k;
+      }
+
+      function hitRock(x,y){
+        for(let i=rocks.length-1;i>=0;i--){
+          const r=rocks[i];
+          const dx=x-r.x, dy=y-r.y;
+          if(dx*dx+dy*dy <= r.r*r.r){
             smashRock(i);
             return true;
           }
@@ -640,256 +1124,497 @@
         return false;
       }
 
-      function smashRock(idx) {
-        const r = rocks[idx];
+      function burstIce(x,y,rad){
+        const n = Math.floor(18 + rad*0.5);
+        for(let i=0;i<n;i++){
+          const a=rand(0,Math.PI*2), sp=rand(0.8,4.2);
+          particles.push({x,y,vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:rand(1.2,3.4), life:rand(380,720), born:performance.now(), kind:'ice'});
+        }
+        particles.push({ring:true,x,y,r:Math.max(10,rad*0.55), life:260, born:performance.now(), kind:'ice'});
+      }
+
+      function smashRock(i){
+        const r=rocks[i];
         smashed++;
         score++;
+        scoreEl.textContent = score;
         computeDifficulty();
 
-        missesStreak = 0;
+        if (audioCtx && audioCtx.state === 'running') playRockHit(Math.min(1.6, 1 + difficulty*0.12));
+
+        missesStreak=0;
         updateMissesUI();
-
-        burst(r.x, r.y, r.r);
-        rocks.splice(idx, 1);
-        scoreEl.textContent = score;
+        burstIce(r.x,r.y,r.r);
+        rocks.splice(i,1);
         scheduleNextSpawn();
+
+        if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
       }
 
-      // ===== Particles =====
-      function burst(x, y, radius) {
-        const n = Math.floor(18 + radius * 0.5);
-        for (let i = 0; i < n; i++) {
-          const a = rand(0, Math.PI*2);
-          const sp = rand(0.8, 4.2);
-          particles.push({
-            x, y,
-            vx: Math.cos(a)*sp,
-            vy: Math.sin(a)*sp,
-            r: rand(1.2, 3.4),
-            life: rand(380, 720),
-            born: performance.now(),
-          });
+      // ---------- Forest game ----------
+      let swingStart=0;
+      let swingLife=900;
+      let swingSide='left';
+      let swingResolved=false;
+
+      function forestUpdateTiming(){
+        const base=950, min=280;
+        swingLife = Math.max(min, base/(0.85 + difficulty*0.85));
+      }
+      function forestNextSwing(now){
+        swingStart=now;
+        swingSide = (Math.random()<0.5) ? 'left' : 'right';
+        swingResolved=false;
+      }
+      function burstWood(x,y,rad){
+        const n = Math.floor(18 + rad*0.45);
+        for(let i=0;i<n;i++){
+          const a=rand(-Math.PI*0.15, Math.PI*1.15), sp=rand(1.0,4.8);
+          particles.push({x,y,vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - rand(1.0,2.3), r:rand(1.4,3.3), life:rand(340,740), born:performance.now(), kind:'wood'});
         }
-        particles.push({
-          ring: true,
-          x, y,
-          r: Math.max(10, radius*0.55),
-          life: 260,
-          born: performance.now()
-        });
+        particles.push({ring:true,x,y,r:Math.max(10,rad*0.6), life:240, born:performance.now(), kind:'wood'});
+      }
+      function forestResolveCorrect(now){
+        swingResolved=true;
+        smashed++;
+        score++;
+        scoreEl.textContent = score;
+        computeDifficulty();
+
+        if (audioCtx && audioCtx.state === 'running') playWoodHit(Math.min(1.6, 1 + difficulty*0.10));
+
+        forestUpdateTiming();
+        burstWood(W*0.5, H*0.64, 28);
+        forestNextSwing(now+20);
+
+        if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
       }
 
-      // ===== Drawing =====
-      function drawRockShape(ctx, x, y, r, seed, crack, t, alpha, danger) {
-        const points = 11;
-        const ang0 = seed;
-        ctx.beginPath();
-        for (let i = 0; i <= points; i++) {
-          const a = ang0 + (i/points)*Math.PI*2;
-          const wob = 0.14*Math.sin(a*3 + seed*4) + 0.08*Math.cos(a*5 - seed*3);
-          const rr = r * (1 + wob);
-          const px = x + Math.cos(a)*rr;
-          const py = y + Math.sin(a)*rr;
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+      function drawForestBackLayer(){
+        const g1 = fctx.createRadialGradient(W*0.18, H*0.18, 10, W*0.18, H*0.18, Math.max(W,H)*0.9);
+        g1.addColorStop(0,'rgba(150,255,196,0.14)');
+        g1.addColorStop(1,'rgba(0,0,0,0)');
+        fctx.fillStyle=g1; fctx.fillRect(0,0,W,H);
+
+        const g2 = fctx.createRadialGradient(W*0.85, H*0.12, 10, W*0.85, H*0.12, Math.max(W,H)*0.8);
+        g2.addColorStop(0,'rgba(255,214,120,0.10)');
+        g2.addColorStop(1,'rgba(0,0,0,0)');
+        fctx.fillStyle=g2; fctx.fillRect(0,0,W,H);
+
+        const v = fctx.createRadialGradient(W*0.5,H*0.5,Math.min(W,H)*0.35, W*0.5,H*0.5,Math.max(W,H)*0.75);
+        v.addColorStop(0,'rgba(0,0,0,0)');
+        v.addColorStop(1,'rgba(0,0,0,0.26)');
+        fctx.fillStyle=v; fctx.fillRect(0,0,W,H);
+
+        const soil = fctx.createLinearGradient(0,H*0.62,0,H);
+        soil.addColorStop(0,'rgba(10,32,18,0.00)');
+        soil.addColorStop(0.55,'rgba(10,32,18,0.22)');
+        soil.addColorStop(1,'rgba(10,32,18,0.36)');
+        fctx.fillStyle=soil; fctx.fillRect(0,0,W,H);
+      }
+
+      function drawForestTree(now){
+        const cx=W*0.5;
+        const baseY=H*0.80;
+        const trunkTopY=H*0.44;
+
+        const trunkW = Math.min(98, Math.max(66, W*0.105));
+        const trunkX = cx - trunkW*0.45;
+        const trunkH = baseY - trunkTopY;
+
+        fctx.save();
+        fctx.shadowColor='rgba(0,0,0,0.45)';
+        fctx.shadowBlur=20;
+        fctx.shadowOffsetY=12;
+
+        const trunkGrad = fctx.createLinearGradient(trunkX, trunkTopY, trunkX+trunkW, baseY);
+        trunkGrad.addColorStop(0,'rgba(105,72,42,0.95)');
+        trunkGrad.addColorStop(0.45,'rgba(160,112,70,0.93)');
+        trunkGrad.addColorStop(1,'rgba(82,54,34,0.95)');
+        fctx.fillStyle=trunkGrad;
+
+        roundRectPath(fctx, trunkX, trunkTopY, trunkW*0.90, trunkH, 26);
+        fctx.fill();
+        fctx.restore();
+
+        fctx.fillStyle='rgba(92,62,38,0.85)';
+        for(let i=0;i<3;i++){
+          const dir=(i-1);
+          fctx.beginPath();
+          fctx.moveTo(cx + dir*trunkW*0.2, baseY-6);
+          fctx.quadraticCurveTo(cx + dir*trunkW*0.75, baseY + 26, cx + dir*trunkW*1.1, baseY + 14);
+          fctx.quadraticCurveTo(cx + dir*trunkW*0.75, baseY + 6, cx + dir*trunkW*0.35, baseY);
+          fctx.closePath();
+          fctx.fill();
         }
-        ctx.closePath();
 
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.35)';
-        ctx.shadowBlur = 18;
-        ctx.shadowOffsetY = 10;
-        ctx.fillStyle = `rgba(6,18,32,${0.22*alpha})`;
-        ctx.fill();
-        ctx.restore();
-
-        const grad = ctx.createRadialGradient(x - r*0.25, y - r*0.35, r*0.2, x, y, r*1.2);
-        grad.addColorStop(0, `rgba(207,239,255,${0.95*alpha})`);
-        grad.addColorStop(0.55, `rgba(159,216,255,${0.55*alpha})`);
-        grad.addColorStop(1, `rgba(20,70,100,${0.45*alpha})`);
-
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.lineWidth = 2.0;
-        ctx.strokeStyle = `rgba(207,239,255,${0.35*alpha})`;
-        ctx.stroke();
-
-        if (crack > 0) {
-          ctx.beginPath();
-          const len = r * (0.4 + crack*0.8);
-          const a = seed + t*0.002;
-          const x2 = x + Math.cos(a)*len;
-          const y2 = y + Math.sin(a)*len;
-          ctx.moveTo(x - Math.cos(a)*len*0.2, y - Math.sin(a)*len*0.2);
-          ctx.lineTo(x2, y2);
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = `rgba(234,247,255,${0.55*alpha})`;
-          ctx.stroke();
+        fctx.strokeStyle='rgba(255,235,205,0.10)';
+        fctx.lineWidth=1.5;
+        for(let i=0;i<14;i++){
+          const x = trunkX + rand(10, trunkW*0.72);
+          const y1 = trunkTopY + rand(10, trunkH*0.85);
+          const y2 = y1 + rand(18, 60);
+          fctx.beginPath();
+          fctx.moveTo(x, y1);
+          fctx.bezierCurveTo(x+rand(-8,8), y1+rand(10,20), x+rand(-10,10), y2-rand(10,18), x+rand(-6,6), y2);
+          fctx.stroke();
         }
 
-        if (danger) {
-          ctx.beginPath();
-          ctx.arc(x, y, r*1.06, 0, Math.PI*2);
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = `rgba(255,107,107,${0.6*alpha})`;
-          ctx.stroke();
+        const crownY = H*0.29;
+        const crownR = Math.min(182, Math.max(130, W*0.19));
+        const wob = Math.sin(now*0.0012)*1.8;
+
+        function blob(x,y,r,a){
+          const g = fctx.createRadialGradient(x-r*0.2,y-r*0.2,10,x,y,r*1.2);
+          g.addColorStop(0, `rgba(170,255,205,${0.42*a})`);
+          g.addColorStop(0.55, `rgba(95,210,150,${0.30*a})`);
+          g.addColorStop(1,'rgba(0,0,0,0)');
+          fctx.fillStyle=g;
+          fctx.beginPath(); fctx.arc(x,y,r,0,Math.PI*2); fctx.fill();
+        }
+
+        blob(cx-6+wob, crownY-6, crownR*1.02, 1);
+        blob(cx-40+wob*0.6, crownY+10, crownR*0.62, 0.9);
+        blob(cx+44-wob*0.5, crownY+18, crownR*0.58, 0.9);
+        blob(cx+10-wob*0.4, crownY-44, crownR*0.54, 0.85);
+
+        fctx.strokeStyle='rgba(120,85,50,0.35)';
+        fctx.lineWidth=2;
+        for(let i=0;i<3;i++){
+          const dir=i-1;
+          fctx.beginPath();
+          fctx.moveTo(cx, trunkTopY+30);
+          fctx.quadraticCurveTo(cx + dir*trunkW*0.7, trunkTopY-15, cx + dir*trunkW*0.95, trunkTopY-50);
+          fctx.stroke();
         }
       }
 
-      // ===== Game loop =====
-      function frame(now) {
+      function drawForestPrompt(now){
+        const needKey = (swingSide==='left') ? 'A' : 'D';
+        const cx=W*0.5;
+        const trunkW = Math.min(98, Math.max(66, W*0.105));
+        const kx = (swingSide==='left') ? cx - trunkW*0.95 : cx + trunkW*0.95;
+        const ky = H*0.60;
+
+        const t = clamp01((now - swingStart) / swingLife);
+        const urgent = t > 0.75;
+
+        fctx.beginPath();
+        fctx.arc(kx,ky,22,0,Math.PI*2);
+        fctx.fillStyle = urgent ? 'rgba(255,107,107,0.18)' : 'rgba(150,255,196,0.12)';
+        fctx.fill();
+        fctx.lineWidth=2;
+        fctx.strokeStyle = urgent ? 'rgba(255,107,107,0.55)' : 'rgba(150,255,196,0.38)';
+        fctx.stroke();
+
+        fctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        fctx.fillStyle='rgba(234,247,255,0.95)';
+        fctx.textAlign='center';
+        fctx.textBaseline='middle';
+        fctx.fillText(needKey, kx, ky);
+
+        const start=-Math.PI/2;
+        fctx.beginPath();
+        fctx.arc(kx,ky,28,start,start + Math.PI*2*(1-t));
+        fctx.lineWidth=3;
+        fctx.strokeStyle = urgent ? 'rgba(255,107,107,0.75)' : 'rgba(101,255,178,0.55)';
+        fctx.stroke();
+      }
+
+      function drawAxe(now){
+        const cx=W*0.5;
+        const trunkW = Math.min(98, Math.max(66, W*0.105));
+        const t = clamp01((now - swingStart)/swingLife);
+
+        const fromLeft = (swingSide==='left');
+        const hitY = H*0.62;
+
+        const startX = fromLeft ? (cx - trunkW*1.62) : (cx + trunkW*1.62);
+        const endX   = fromLeft ? (cx - trunkW*0.58) : (cx + trunkW*0.58);
+        const x = startX + (endX - startX) * easeOut(t);
+
+        const startY = hitY - 70;
+        const endY   = hitY + 10;
+        const y = startY + (endY - startY) * easeIn(t);
+
+        const rotStart = fromLeft ? -0.85 : 0.85;
+        const rotEnd   = fromLeft ? 0.18 : -0.18;
+        const rot = rotStart + (rotEnd - rotStart) * easeInOut(t);
+
+        fctx.save();
+        fctx.translate(x,y);
+        fctx.rotate(rot);
+
+        if (!fromLeft) fctx.scale(-1,1);
+
+        fctx.save();
+        fctx.shadowColor='rgba(0,0,0,0.35)';
+        fctx.shadowBlur=14;
+        fctx.shadowOffsetY=8;
+
+        const handleGrad = fctx.createLinearGradient(-8,-60,8,60);
+        handleGrad.addColorStop(0,'rgba(170,120,70,0.95)');
+        handleGrad.addColorStop(1,'rgba(95,65,40,0.95)');
+        fctx.fillStyle=handleGrad;
+        roundRectPath(fctx, -6, -64, 12, 130, 8);
+        fctx.fill();
+
+        fctx.strokeStyle='rgba(255,235,205,0.20)';
+        fctx.lineWidth=2;
+        for(let i=0;i<5;i++){
+          const yy=15+i*10;
+          fctx.beginPath();
+          fctx.moveTo(-7,yy);
+          fctx.lineTo(7,yy-2);
+          fctx.stroke();
+        }
+
+        const bladeGrad = fctx.createRadialGradient(18,-38,8,12,-36,48);
+        bladeGrad.addColorStop(0,'rgba(207,239,255,0.95)');
+        bladeGrad.addColorStop(0.6,'rgba(159,216,255,0.55)');
+        bladeGrad.addColorStop(1,'rgba(20,70,100,0.35)');
+        fctx.fillStyle=bladeGrad;
+
+        fctx.beginPath();
+        fctx.moveTo(4,-55);
+        fctx.lineTo(42,-44);
+        fctx.quadraticCurveTo(52,-38,42,-28);
+        fctx.lineTo(4,-18);
+        fctx.closePath();
+        fctx.fill();
+
+        fctx.lineWidth=2;
+        fctx.strokeStyle='rgba(207,239,255,0.30)';
+        fctx.stroke();
+
+        fctx.restore();
+        fctx.restore();
+      }
+
+      function drawForestScene(now){
+        drawForestBackLayer();
+        drawForestTree(now);
+        drawLeaves();
+        drawForestPrompt(now);
+        drawAxe(now);
+      }
+
+      function updateAndDrawParticles(now, dt){
+        for(let i=particles.length-1;i>=0;i--){
+          const p=particles[i];
+          const age = now - p.born;
+          if(age >= p.life){ particles.splice(i,1); continue; }
+          const tt = age/p.life;
+          const a = 1-tt;
+
+          if(p.ring){
+            const rr = p.r + tt*40;
+            fctx.beginPath();
+            fctx.arc(p.x,p.y,rr,0,Math.PI*2);
+            fctx.lineWidth=2;
+            fctx.strokeStyle = (p.kind==='wood') ? `rgba(255,214,120,${0.30*a})` : `rgba(207,239,255,${0.35*a})`;
+            fctx.stroke();
+          } else {
+            p.vy += 0.015*dt;
+            p.x += p.vx*(dt/16.7);
+            p.y += p.vy*(dt/16.7);
+            p.vx *= 0.99; p.vy *= 0.99;
+
+            fctx.beginPath();
+            fctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            fctx.fillStyle = (p.kind==='wood') ? `rgba(255,214,120,${0.75*a})` : `rgba(207,239,255,${0.85*a})`;
+            fctx.fill();
+          }
+        }
+      }
+
+      function getPointerPos(e){
+        const rect = fx.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+
+      fx.addEventListener('pointerdown', (e)=>{
+        if(!running || paused || lost) return;
+        if(mode!=='mines') return;
+
+        const {x,y} = getPointerPos(e);
+        const ok = hitRock(x,y);
+        if(ok){
+          burstIce(x,y,18);
+        } else {
+          missesStreak++;
+          updateMissesUI();
+          burstIce(x,y,10);
+          if(missesStreak>=MAX_MISSES) lose('miss_clicks');
+        }
+      }, {passive:true});
+
+      function handleForestKey(key, now){
+        if(!running || paused || lost) return;
+        if(mode!=='forest') return;
+        if(swingResolved) return;
+
+        const need = (swingSide==='left') ? 'a' : 'd';
+        if(key===need){
+          missesStreak=0;
+          updateMissesUI();
+          forestResolveCorrect(now);
+        } else if(key==='a' || key==='d'){
+          missesStreak++;
+          updateMissesUI();
+          burstWood(W*0.5, H*0.64, 18);
+          if(missesStreak>=MAX_MISSES) lose('miss_clicks');
+          else lose('wood_wrong');
+        }
+      }
+
+      window.addEventListener('pointerdown', async () => {
+        await resumeAudio();
+        if (musicOn && !musicTimer) startMusic();
+      }, { once:true });
+
+      function frame(now){
         const dt = Math.min(33, now - lastTime);
         lastTime = now;
 
-        drawBackground();
-        fctx.clearRect(0, 0, W, H);
+        drawBackgroundBase();
+        fctx.clearRect(0,0,W,H);
 
-        if (running && !paused && !lost) {
-          spawnTimer += dt;
+        if(running && !paused && !lost){
+          if(mode==='mines'){
+            spawnTimer += dt;
+            if(spawnTimer >= nextSpawn){
+              spawnTimer = 0;
+              spawnRock();
+              scheduleNextSpawn();
+            }
 
-          if (spawnTimer >= nextSpawn) {
-            spawnTimer = 0;
-            spawnRock();
-            scheduleNextSpawn();
-          }
-
-          for (let i = rocks.length - 1; i >= 0; i--) {
-            const r = rocks[i];
-            const age = now - r.born;
-            r.wob += r.wobSpd;
-            r.crack = Math.min(1, age / r.life);
-
-            if (age >= r.life) {
-              lose('miss_rock');
-              break;
+            for(let i=rocks.length-1;i>=0;i--){
+              const k = drawRock(rocks[i], now);
+              if(k>=1){
+                lose('miss_rock');
+                break;
+              }
+            }
+          } else if(mode==='forest'){
+            const age = now - swingStart;
+            if(!swingResolved && age >= swingLife){
+              missesStreak++;
+              updateMissesUI();
+              burstWood(W*0.5, H*0.64, 18);
+              if(missesStreak>=MAX_MISSES) lose('miss_clicks');
+              else lose('wood_timeout');
             }
           }
         }
 
-        for (const r of rocks) {
-          const age = now - r.born;
-          const k = Math.min(1, age / r.life);
-          const alpha = 1 - Math.max(0, (k - 0.85) / 0.15) * 0.75;
-          const danger = k > 0.78;
-          const wobR = r.r * (1 + Math.sin(r.wob)*0.02);
-          drawRockShape(fctx, r.x, r.y, wobR, r.wob, r.crack, now, alpha, danger);
-
-          fctx.beginPath();
-          const start = -Math.PI/2;
-          fctx.arc(r.x, r.y, r.r*0.72, start, start + Math.PI*2*(1-k));
-          fctx.lineWidth = 3;
-          fctx.strokeStyle = danger ? 'rgba(255,107,107,0.75)' : 'rgba(101,255,178,0.6)';
-          fctx.stroke();
-        }
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          const age = now - p.born;
-          if (age >= p.life) { particles.splice(i, 1); continue; }
-
-          const t = age / p.life;
-          const a = 1 - t;
-
-          if (p.ring) {
-            const rr = p.r + t * 40;
-            fctx.beginPath();
-            fctx.arc(p.x, p.y, rr, 0, Math.PI*2);
-            fctx.lineWidth = 2;
-            fctx.strokeStyle = `rgba(207,239,255,${0.35*a})`;
-            fctx.stroke();
-          } else {
-            p.vy += 0.015 * dt;
-            p.x += p.vx * (dt/16.7);
-            p.y += p.vy * (dt/16.7);
-            p.vx *= 0.99;
-            p.vy *= 0.99;
-
-            fctx.beginPath();
-            fctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-            fctx.fillStyle = `rgba(207,239,255,${0.85*a})`;
-            fctx.fill();
+        if(mode==='mines'){
+          if(!(running && !paused && !lost)){
+            for(const r of rocks) drawRock(r, now);
           }
+        } else if(mode==='forest'){
+          drawForestScene(now);
         }
 
+        updateAndDrawParticles(now, dt);
         requestAnimationFrame(frame);
       }
-      requestAnimationFrame(frame);
 
-      // ===== Input =====
-      function getPointerPos(e) {
-        const rect = fx.getBoundingClientRect();
-        const x = (e.clientX - rect.left);
-        const y = (e.clientY - rect.top);
-        return { x, y };
+      function startMine(level){
+        if(level!==1){ showToast(toastMines,'Этот уровень пока недоступен ❄️'); return; }
+        mode='mines';
+        currentJobName='Шахты';
+        currentLocationName='Ледяные шахты нортленда';
+        footerHint.textContent='Шахты: кликай по камням. Промахи подряд = поражение ❄️';
+
+        resetCommon();
+        rocks=[];
+        spawnTimer=0;
+        nextSpawn=900;
+        scheduleNextSpawn();
       }
 
-      fx.addEventListener('pointerdown', (e) => {
-        if (!running || paused || lost) return;
+      function startForest(level){
+        if(level!==1){ showToast(toastForest,'Этот маршрут пока недоступен 🌲'); return; }
+        mode='forest';
+        currentJobName='Лесопилка';
+        currentLocationName='Лесопилка Нортленда';
+        footerHint.textContent='Лесопилка: слева A, справа D — бей быстро 🌲';
 
-        const { x, y } = getPointerPos(e);
-        const ok = hitRock(x, y);
-
-        if (ok) {
-          burst(x, y, 18);
-        } else {
-          missesStreak++;
-          updateMissesUI();
-          burst(x, y, 10);
-
-          if (missesStreak >= MAX_MISSES) {
-            lose('miss_clicks');
-          }
-        }
-      }, { passive: true });
-
-      // ===== UI =====
-      function startMine(level) {
-        if (level !== 1) {
-          showToast('Этот уровень пока недоступен ❄️');
-          return;
-        }
-        currentMineName = 'Ледяные шахты нортленда';
-        resetGame();
+        resetCommon();
+        forestUpdateTiming();
+        forestNextSwing(performance.now());
       }
 
-      mine1.addEventListener('click', () => startMine(1));
-      mine2.addEventListener('click', () => startMine(2));
-      mine3.addEventListener('click', () => startMine(3));
-      mine4.addEventListener('click', () => startMine(4));
-      mine5.addEventListener('click', () => startMine(5));
+      goMines.addEventListener('click', showMinesMenu);
+      goForest.addEventListener('click', showForestMenu);
 
-      howBtn.addEventListener('click', () => {
+      backToMainFromMines.addEventListener('click', showMainMenu);
+      backToMainFromForest.addEventListener('click', showMainMenu);
+
+      howBtn.addEventListener('click', ()=>{
         hideAllPanels();
+        overlay.classList.remove('hidden');
         howPanel.classList.remove('hidden');
       });
-      backBtn.addEventListener('click', () => {
-        hideAllPanels();
-        menuPanel.classList.remove('hidden');
+      backBtn.addEventListener('click', showMainMenu);
+
+      mine1.addEventListener('click', ()=> startMine(1));
+      mine2.addEventListener('click', ()=> startMine(2));
+      mine3.addEventListener('click', ()=> startMine(3));
+      mine4.addEventListener('click', ()=> startMine(4));
+      mine5.addEventListener('click', ()=> startMine(5));
+
+      forest1.addEventListener('click', ()=> startForest(1));
+      forest2.addEventListener('click', ()=> startForest(2));
+      forest3.addEventListener('click', ()=> startForest(3));
+
+      againBtn.addEventListener('click', ()=>{
+        if(mode==='forest') startForest(1);
+        else startMine(1);
+      });
+      toMenuBtn.addEventListener('click', showMainMenu);
+
+      pauseBtn.addEventListener('click', ()=> togglePause());
+      restartBtn.addEventListener('click', ()=>{
+        if(mode==='forest') startForest(1);
+        else startMine(1);
+      });
+      resumeBtn.addEventListener('click', ()=> togglePause(false));
+      pauseRestartBtn.addEventListener('click', ()=>{
+        if(mode==='forest') startForest(1);
+        else startMine(1);
       });
 
-      againBtn.addEventListener('click', () => resetGame());
-      toMenuBtn.addEventListener('click', showMenu);
-
-      pauseBtn.addEventListener('click', () => togglePause());
-      restartBtn.addEventListener('click', () => resetGame());
-      resumeBtn.addEventListener('click', () => togglePause(false));
-      pauseRestartBtn.addEventListener('click', () => resetGame());
-
-      window.addEventListener('keydown', (e) => {
+      window.addEventListener('keydown', (e)=>{
         const k = e.key.toLowerCase();
-        if (k === 'p') togglePause();
-        if (k === 'r') resetGame();
-        if (k === 'escape') showMenu();
-        if (k === ' ' || k === 'enter') {
-          if (!running && !lost) startMine(1);
-          else if (paused) togglePause(false);
+        if(k==='p') togglePause();
+        if(k==='escape') showMainMenu();
+        if(k==='r'){
+          if(mode==='forest') startForest(1);
+          else startMine(1);
         }
+        handleForestKey(k, performance.now());
       });
 
-      // Стартовое меню
-      showMenu();
+      musicBtn.addEventListener('click', async ()=>{
+        await resumeAudio();
+        musicOn = !musicOn;
+        musicBtn.textContent = `Музыка: ${musicOn ? 'ON' : 'OFF'}`;
+        if(musicOn) startMusic();
+        else stopMusic();
+      });
+
+      sfxBtn.addEventListener('click', async ()=>{
+        await resumeAudio();
+        sfxOn = !sfxOn;
+        sfxBtn.textContent = `Звук: ${sfxOn ? 'ON' : 'OFF'}`;
+      });
+
+      resize();
       updateMissesUI();
+      showMainMenu();
+      requestAnimationFrame(frame);
     })();
   </script>
 </body>
