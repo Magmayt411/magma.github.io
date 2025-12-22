@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ACT 4 Retriburion</title>
+  <style>
+    :root{
+      --bg1:#061220;
+      --bg2:#0a2a3d;
+      --ice:#cfefff;
+      --ice2:#9fd8ff;
+      --danger:#ff6b6b;
+      --ok:#65ffb2;
+      --shadow: rgba(0,0,0,.35);
+    }
+
+    *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color: transparent; }
+    html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #eaf7ff; }
+
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 30% 20%, rgba(159,216,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 80% 10%, rgba(207,239,255,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+
+    .frost{
+      position:fixed; inset:-40px;
+      background:
+        radial-gradient(800px 400px at 20% 10%, rgba(207,239,255,.10), transparent 60%),
+        radial-gradient(700px 380px at 70% 0%, rgba(207,239,255,.08), transparent 60%),
+        radial-gradient(900px 500px at 50% 100%, rgba(159,216,255,.08), transparent 65%);
+      pointer-events:none;
+    }
+
+    #game{ position:fixed; inset:0; }
+    canvas{ position:absolute; inset:0; width:100%; height:100%; }
+
+    .hud{
+      position:fixed;
+      top:16px; left:16px; right:16px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      pointer-events:none;
+    }
+
+    .pill{
+      pointer-events:none;
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px var(--shadow);
+      border: 1px solid rgba(207,239,255,.18);
+    }
+
+    .score{
+      font-weight:700;
+      letter-spacing:.2px;
+      display:flex; align-items:baseline; gap:8px;
+    }
+    .score span{ color: var(--ice2); font-size: 22px; }
+
+    .tiny{ opacity:.9; font-size:12px; letter-spacing:.2px; }
+    .miss{ opacity:.95; font-size:12px; margin-left:8px; }
+
+    .btnRow{ display:flex; gap:10px; pointer-events:auto; }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(207,239,255,.22);
+      color:#eaf7ff;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow: 0 10px 25px var(--shadow);
+      font-weight:600;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease, filter .12s ease, opacity .12s ease;
+    }
+    button:hover{ border-color: rgba(207,239,255,.35); transform: translateY(-1px); }
+    button:active{ transform: translateY(0px); }
+
+    .centerOverlay{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none;
+    }
+
+    .panel{
+      width:min(560px, calc(100% - 32px));
+      border-radius:22px;
+      background: rgba(6,18,32,.55);
+      border: 1px solid rgba(207,239,255,.20);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(14px);
+      padding:18px 18px 14px;
+      pointer-events:auto;
+    }
+
+    .title{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:8px;
+    }
+    h1{ margin:0; font-size:22px; letter-spacing:.3px; }
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(207,239,255,.22);
+      background: rgba(207,239,255,.08);
+      color: rgba(234,247,255,.95);
+      white-space:nowrap;
+    }
+
+    .panel p{ margin:10px 0; line-height:1.45; opacity:.95; }
+    .panel .big{ font-size:18px; font-weight:800; margin-top:4px; margin-bottom:10px; }
+    .panel .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+
+    .panel .actions button{ border-radius:14px; padding:12px 14px; }
+    .primary{
+      border-color: rgba(101,255,178,.35) !important;
+      background: rgba(101,255,178,.12) !important;
+    }
+    .danger{
+      border-color: rgba(255,107,107,.35) !important;
+      background: rgba(255,107,107,.10) !important;
+    }
+
+    .hidden{ display:none !important; }
+
+    .footerHint{
+      position:fixed;
+      bottom:12px; left:0; right:0;
+      text-align:center;
+      font-size:12px;
+      opacity:.7;
+      pointer-events:none;
+    }
+
+    /* ======= МЕНЮ ШАХТ ======= */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+    @media (max-width: 520px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .mine{
+      position:relative;
+      text-align:left;
+      padding:14px 14px 12px;
+      border-radius:18px;
+      border:1px solid rgba(207,239,255,.20);
+      background: rgba(6,18,32,.38);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .mine .topline{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:8px;
+    }
+    .mine .name{ font-weight:800; letter-spacing:.2px; }
+    .mine .sub{ font-size:12px; opacity:.85; }
+    .mine .lock{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(207,239,255,.18);
+      background: rgba(207,239,255,.06);
+      opacity:.9;
+      transition: opacity .12s ease, transform .12s ease;
+      white-space:nowrap;
+    }
+    .mine[disabled]{ cursor:not-allowed; filter: grayscale(.3); opacity:.85; }
+    .mine:hover{ border-color: rgba(207,239,255,.34); }
+
+    /* Эффект "легкий" + скрыть "доступно" при ховере */
+    .mine.easy::before{
+      content:"";
+      position:absolute; inset:-80px;
+      background:
+        radial-gradient(480px 240px at 20% 20%, rgba(101,255,178,.25), transparent 60%),
+        radial-gradient(520px 280px at 80% 10%, rgba(159,216,255,.18), transparent 65%),
+        radial-gradient(560px 320px at 50% 110%, rgba(101,255,178,.12), transparent 70%);
+      opacity:0;
+      transform: scale(1.02);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events:none;
+    }
+    .mine.easy:hover::before{
+      opacity:1;
+      transform: scale(1.0);
+    }
+    .mine.easy::after{
+      content:"ЛЕГКО";
+      position:absolute;
+      top:12px; right:12px;
+      font-size:11px;
+      letter-spacing:.9px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(101,255,178,.30);
+      background: rgba(101,255,178,.10);
+      color: rgba(223,255,240,.95);
+      opacity:0;
+      transition: opacity .18s ease;
+      pointer-events:none;
+    }
+    .mine.easy:hover::after{ opacity:1; }
+
+    /* Вот это — чтобы "доступно" пропадало на наведении */
+    .mine.easy:hover .lock{
+      opacity:0;
+      transform: translateY(-2px) scale(.98);
+      pointer-events:none;
+    }
+
+    .toast{
+      margin-top:10px;
+      font-size:12px;
+      opacity:.88;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,107,107,.25);
+      background: rgba(255,107,107,.08);
+      display:none;
+    }
+    .toast.show{ display:block; }
+  </style>
+</head>
+<body>
+  <div class="frost"></div>
+  <div id="game">
+    <canvas id="bg"></canvas>
+    <canvas id="fx"></canvas>
+  </div>
+
+  <div class="hud">
+    <div class="pill">
+      <div class="score">Счёт: <span id="score">0</span></div>
+      <div class="miss" id="misses">Промахи: 0/5</div>
+      <div class="tiny" id="diff">Сложность: 1.00×</div>
+    </div>
+
+    <div class="btnRow">
+      <button id="pauseBtn" title="Пауза (P)">Пауза</button>
+      <button id="restartBtn" title="Рестарт (R)">Рестарт</button>
+    </div>
+  </div>
+
+  <div class="centerOverlay" id="overlay">
+    <!-- Главное меню (шахты) -->
+    <div class="panel" id="menuPanel">
+      <div class="title">
+        <h1>ACT 4 Retriburion</h1>
+        <div class="badge">выбор шахты</div>
+      </div>
+
+      <p class="big">В какую шахту пойдем сегодня?</p>
+      <p class="tiny">уточни у Дани в какую можно идти.</p>
+
+      <div class="grid">
+        <button class="mine easy" id="mine1">
+          <div class="topline">
+            <div class="name">Ледяные шахты нортленда</div>
+            <div class="lock">доступно</div>
+          </div>
+          <div class="sub">Обычный режим. Камни ускоряются со счётом.</div>
+        </button>
+
+        <button class="mine" id="mine2" disabled>
+          <div class="topline">
+            <div class="name">Шахта 2</div>
+            <div class="lock">🔒 скоро</div>
+          </div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+
+        <button class="mine" id="mine3" disabled>
+          <div class="topline">
+            <div class="name">Шахта 3</div>
+            <div class="lock">🔒 скоро</div>
+          </div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+
+        <button class="mine" id="mine4" disabled>
+          <div class="topline">
+            <div class="name">Шахта 4</div>
+            <div class="lock">🔒 скоро</div>
+          </div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+
+        <button class="mine" id="mine5" disabled>
+          <div class="topline">
+            <div class="name">Шахта 5</div>
+            <div class="lock">🔒 скоро</div>
+          </div>
+          <div class="sub">Пока недоступно.</div>
+        </button>
+      </div>
+
+      <div class="toast" id="toast">Этот уровень пока недоступен ❄️</div>
+
+      <div class="actions">
+        <button id="howBtn">Управление</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="howPanel">
+      <div class="title">
+        <h1>Управление</h1>
+        <div class="badge">подсказка</div>
+      </div>
+      <p>🖱️ Клик по камню — сломать.</p>
+      <p>❌ <b>5 промахов подряд</b> (клик мимо камня) — поражение: <b>«Слишком много промахов»</b>.</p>
+      <p>⌨️ <b>P</b> — пауза, <b>R</b> — рестарт, <b>Space</b> — начать/продолжить.</p>
+      <div class="actions">
+        <button class="primary" id="backBtn">Назад</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="losePanel">
+      <div class="title">
+        <h1 id="loseTitle">Поражение ❄️</h1>
+        <div class="badge" id="finalBadge">счёт: 0</div>
+      </div>
+      <p class="big" id="loseReason">Камень исчез раньше, чем ты его сломал.</p>
+      <p class="tiny" id="mineLine"></p>
+      <p id="statsLine" class="tiny"></p>
+      <div class="actions">
+        <button class="primary" id="againBtn">Ещё раз</button>
+        <button class="danger" id="toMenuBtn">В меню</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pausePanel">
+      <div class="title">
+        <h1>Пауза</h1>
+        <div class="badge">нажми P</div>
+      </div>
+      <p>Отдохни секундочку. 🙂</p>
+      <div class="actions">
+        <button class="primary" id="resumeBtn">Продолжить</button>
+        <button class="danger" id="pauseRestartBtn">Рестарт</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footerHint">Подсказка: промахи подряд убивают — кликай точнее ❄️</div>
+
+  <script>
+    (() => {
+      // ===== Canvas setup =====
+      const bg = document.getElementById('bg');
+      const fx = document.getElementById('fx');
+      const bctx = bg.getContext('2d');
+      const fctx = fx.getContext('2d');
+
+      const scoreEl = document.getElementById('score');
+      const diffEl = document.getElementById('diff');
+      const missesEl = document.getElementById('misses');
+
+      const overlay = document.getElementById('overlay');
+      const menuPanel = document.getElementById('menuPanel');
+      const howPanel = document.getElementById('howPanel');
+      const losePanel = document.getElementById('losePanel');
+      const pausePanel = document.getElementById('pausePanel');
+
+      const loseReasonEl = document.getElementById('loseReason');
+      const loseTitleEl = document.getElementById('loseTitle');
+      const finalBadge = document.getElementById('finalBadge');
+      const statsLine = document.getElementById('statsLine');
+      const mineLine = document.getElementById('mineLine');
+
+      const howBtn = document.getElementById('howBtn');
+      const backBtn = document.getElementById('backBtn');
+
+      const againBtn = document.getElementById('againBtn');
+      const toMenuBtn = document.getElementById('toMenuBtn');
+
+      const pauseBtn = document.getElementById('pauseBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const resumeBtn = document.getElementById('resumeBtn');
+      const pauseRestartBtn = document.getElementById('pauseRestartBtn');
+
+      const mine1 = document.getElementById('mine1');
+      const mine2 = document.getElementById('mine2');
+      const mine3 = document.getElementById('mine3');
+      const mine4 = document.getElementById('mine4');
+      const mine5 = document.getElementById('mine5');
+      const toast = document.getElementById('toast');
+
+      const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let W = 0, H = 0, dpr = DPR();
+
+      function resize() {
+        dpr = DPR();
+        W = Math.floor(window.innerWidth);
+        H = Math.floor(window.innerHeight);
+        for (const c of [bg, fx]) {
+          c.width = Math.floor(W * dpr);
+          c.height = Math.floor(H * dpr);
+          c.style.width = W + 'px';
+          c.style.height = H + 'px';
+        }
+        bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      window.addEventListener('resize', resize, { passive: true });
+      resize();
+
+      // ===== Background snow =====
+      const flakes = [];
+      const FLAKES = 140;
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function initSnow() {
+        flakes.length = 0;
+        for (let i = 0; i < FLAKES; i++) {
+          flakes.push({
+            x: rand(0, W),
+            y: rand(0, H),
+            r: rand(0.8, 2.4),
+            vx: rand(-0.25, 0.25),
+            vy: rand(0.6, 1.6),
+            wob: rand(0, Math.PI * 2),
+            wobSpd: rand(0.006, 0.018),
+            alpha: rand(0.25, 0.85)
+          });
+        }
+      }
+      initSnow();
+
+      function drawBackground() {
+        bctx.clearRect(0, 0, W, H);
+
+        const g = bctx.createRadialGradient(W*0.35, H*0.15, 10, W*0.35, H*0.15, Math.max(W,H)*0.8);
+        g.addColorStop(0, 'rgba(159,216,255,0.18)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        bctx.fillStyle = g;
+        bctx.fillRect(0,0,W,H);
+
+        for (const f of flakes) {
+          f.wob += f.wobSpd;
+          f.x += f.vx + Math.sin(f.wob) * 0.25;
+          f.y += f.vy;
+
+          if (f.y > H + 10) { f.y = -10; f.x = rand(0, W); }
+          if (f.x < -10) f.x = W + 10;
+          if (f.x > W + 10) f.x = -10;
+
+          bctx.beginPath();
+          bctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+          bctx.fillStyle = `rgba(207,239,255,${f.alpha})`;
+          bctx.fill();
+        }
+      }
+
+      // ===== Game state =====
+      let running = false;
+      let paused = false;
+      let lost = false;
+
+      let score = 0;
+      let difficulty = 1;
+      let spawnTimer = 0;
+      let nextSpawn = 900;
+
+      let lastTime = performance.now();
+      let rocks = [];
+      let particles = [];
+
+      // промахи подряд
+      const MAX_MISSES = 5;
+      let missesStreak = 0;
+
+      // текущая шахта (для вывода в конце)
+      let currentMineName = '—';
+
+      // статистика
+      let spawned = 0;
+      let smashed = 0;
+
+      function updateMissesUI() {
+        missesEl.textContent = `Промахи: ${missesStreak}/${MAX_MISSES}`;
+        if (missesStreak >= 3) missesEl.style.color = 'rgba(255,107,107,.95)';
+        else missesEl.style.color = 'rgba(234,247,255,.95)';
+      }
+
+      function resetGame() {
+        running = true;
+        paused = false;
+        lost = false;
+        score = 0;
+        difficulty = 1;
+        spawnTimer = 0;
+        nextSpawn = 900;
+
+        rocks = [];
+        particles = [];
+        spawned = 0;
+        smashed = 0;
+
+        missesStreak = 0;
+        updateMissesUI();
+
+        scoreEl.textContent = score;
+        diffEl.textContent = `Сложность: ${difficulty.toFixed(2)}×`;
+
+        hideAllPanels();
+        overlay.classList.add('hidden');
+        toast.classList.remove('show');
+      }
+
+      function lose(type = 'miss_rock') {
+        running = false;
+        paused = false;
+        lost = true;
+
+        if (type === 'miss_clicks') {
+          loseReasonEl.textContent = 'Слишком много промахов.';
+        } else {
+          loseReasonEl.textContent = 'Камень исчез раньше, чем ты его сломал.';
+        }
+
+        mineLine.textContent = `Шахта: ${currentMineName}`;
+        finalBadge.textContent = `счёт: ${score}`;
+
+        const acc = spawned ? Math.round((smashed / spawned) * 100) : 0;
+        statsLine.textContent = `Камней: ${spawned}, сломано: ${smashed} (${acc}%).`;
+
+        hideAllPanels();
+        overlay.classList.remove('hidden');
+        losePanel.classList.remove('hidden');
+      }
+
+      function togglePause(force) {
+        if (!running && !paused) return;
+        const to = (typeof force === 'boolean') ? force : !paused;
+        paused = to;
+
+        if (paused) {
+          hideAllPanels();
+          overlay.classList.remove('hidden');
+          pausePanel.classList.remove('hidden');
+        } else {
+          hideAllPanels();
+          overlay.classList.add('hidden');
+        }
+      }
+
+      function showMenu() {
+        running = false;
+        paused = false;
+        lost = false;
+        hideAllPanels();
+        overlay.classList.remove('hidden');
+        menuPanel.classList.remove('hidden');
+        toast.classList.remove('show');
+      }
+
+      function hideAllPanels() {
+        menuPanel.classList.add('hidden');
+        howPanel.classList.add('hidden');
+        losePanel.classList.add('hidden');
+        pausePanel.classList.add('hidden');
+      }
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        window.clearTimeout(showToast._t);
+        showToast._t = window.setTimeout(() => toast.classList.remove('show'), 1300);
+      }
+
+      // ===== Difficulty =====
+      function computeDifficulty() {
+        difficulty = 1 + Math.pow(score / 12, 1.15);
+        diffEl.textContent = `Сложность: ${difficulty.toFixed(2)}×`;
+      }
+
+      function scheduleNextSpawn() {
+        const base = 950;
+        const min = 260;
+        const interval = Math.max(min, base / (0.85 + difficulty * 0.75));
+        nextSpawn = interval + rand(-60, 90);
+      }
+
+      function rockLifetime() {
+        const base = 1050;
+        const min = 360;
+        const life = Math.max(min, base / (0.85 + difficulty * 0.9));
+        return life + rand(-40, 70);
+      }
+
+      // ===== Rocks =====
+      function cryptoRandomId() {
+        return Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
+      }
+
+      function spawnRock() {
+        const size = rand(36, 64) * (0.98 + Math.min(0.35, score/80));
+        const x = rand(size, W - size);
+        const y = rand(size + 60, H - size - 30);
+
+        rocks.push({
+          x, y,
+          r: size / 2,
+          born: performance.now(),
+          life: rockLifetime(),
+          hp: 1,
+          wob: rand(0, Math.PI * 2),
+          wobSpd: rand(0.006, 0.02),
+          crack: 0,
+          id: cryptoRandomId()
+        });
+
+        spawned++;
+      }
+
+      function hitRock(mx, my) {
+        for (let i = rocks.length - 1; i >= 0; i--) {
+          const r = rocks[i];
+          const dx = mx - r.x;
+          const dy = my - r.y;
+          if (dx*dx + dy*dy <= r.r*r.r) {
+            smashRock(i);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function smashRock(idx) {
+        const r = rocks[idx];
+        smashed++;
+        score++;
+        computeDifficulty();
+
+        missesStreak = 0;
+        updateMissesUI();
+
+        burst(r.x, r.y, r.r);
+        rocks.splice(idx, 1);
+        scoreEl.textContent = score;
+        scheduleNextSpawn();
+      }
+
+      // ===== Particles =====
+      function burst(x, y, radius) {
+        const n = Math.floor(18 + radius * 0.5);
+        for (let i = 0; i < n; i++) {
+          const a = rand(0, Math.PI*2);
+          const sp = rand(0.8, 4.2);
+          particles.push({
+            x, y,
+            vx: Math.cos(a)*sp,
+            vy: Math.sin(a)*sp,
+            r: rand(1.2, 3.4),
+            life: rand(380, 720),
+            born: performance.now(),
+          });
+        }
+        particles.push({
+          ring: true,
+          x, y,
+          r: Math.max(10, radius*0.55),
+          life: 260,
+          born: performance.now()
+        });
+      }
+
+      // ===== Drawing =====
+      function drawRockShape(ctx, x, y, r, seed, crack, t, alpha, danger) {
+        const points = 11;
+        const ang0 = seed;
+        ctx.beginPath();
+        for (let i = 0; i <= points; i++) {
+          const a = ang0 + (i/points)*Math.PI*2;
+          const wob = 0.14*Math.sin(a*3 + seed*4) + 0.08*Math.cos(a*5 - seed*3);
+          const rr = r * (1 + wob);
+          const px = x + Math.cos(a)*rr;
+          const py = y + Math.sin(a)*rr;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 10;
+        ctx.fillStyle = `rgba(6,18,32,${0.22*alpha})`;
+        ctx.fill();
+        ctx.restore();
+
+        const grad = ctx.createRadialGradient(x - r*0.25, y - r*0.35, r*0.2, x, y, r*1.2);
+        grad.addColorStop(0, `rgba(207,239,255,${0.95*alpha})`);
+        grad.addColorStop(0.55, `rgba(159,216,255,${0.55*alpha})`);
+        grad.addColorStop(1, `rgba(20,70,100,${0.45*alpha})`);
+
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = `rgba(207,239,255,${0.35*alpha})`;
+        ctx.stroke();
+
+        if (crack > 0) {
+          ctx.beginPath();
+          const len = r * (0.4 + crack*0.8);
+          const a = seed + t*0.002;
+          const x2 = x + Math.cos(a)*len;
+          const y2 = y + Math.sin(a)*len;
+          ctx.moveTo(x - Math.cos(a)*len*0.2, y - Math.sin(a)*len*0.2);
+          ctx.lineTo(x2, y2);
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = `rgba(234,247,255,${0.55*alpha})`;
+          ctx.stroke();
+        }
+
+        if (danger) {
+          ctx.beginPath();
+          ctx.arc(x, y, r*1.06, 0, Math.PI*2);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = `rgba(255,107,107,${0.6*alpha})`;
+          ctx.stroke();
+        }
+      }
+
+      // ===== Game loop =====
+      function frame(now) {
+        const dt = Math.min(33, now - lastTime);
+        lastTime = now;
+
+        drawBackground();
+        fctx.clearRect(0, 0, W, H);
+
+        if (running && !paused && !lost) {
+          spawnTimer += dt;
+
+          if (spawnTimer >= nextSpawn) {
+            spawnTimer = 0;
+            spawnRock();
+            scheduleNextSpawn();
+          }
+
+          for (let i = rocks.length - 1; i >= 0; i--) {
+            const r = rocks[i];
+            const age = now - r.born;
+            r.wob += r.wobSpd;
+            r.crack = Math.min(1, age / r.life);
+
+            if (age >= r.life) {
+              lose('miss_rock');
+              break;
+            }
+          }
+        }
+
+        for (const r of rocks) {
+          const age = now - r.born;
+          const k = Math.min(1, age / r.life);
+          const alpha = 1 - Math.max(0, (k - 0.85) / 0.15) * 0.75;
+          const danger = k > 0.78;
+          const wobR = r.r * (1 + Math.sin(r.wob)*0.02);
+          drawRockShape(fctx, r.x, r.y, wobR, r.wob, r.crack, now, alpha, danger);
+
+          fctx.beginPath();
+          const start = -Math.PI/2;
+          fctx.arc(r.x, r.y, r.r*0.72, start, start + Math.PI*2*(1-k));
+          fctx.lineWidth = 3;
+          fctx.strokeStyle = danger ? 'rgba(255,107,107,0.75)' : 'rgba(101,255,178,0.6)';
+          fctx.stroke();
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          const age = now - p.born;
+          if (age >= p.life) { particles.splice(i, 1); continue; }
+
+          const t = age / p.life;
+          const a = 1 - t;
+
+          if (p.ring) {
+            const rr = p.r + t * 40;
+            fctx.beginPath();
+            fctx.arc(p.x, p.y, rr, 0, Math.PI*2);
+            fctx.lineWidth = 2;
+            fctx.strokeStyle = `rgba(207,239,255,${0.35*a})`;
+            fctx.stroke();
+          } else {
+            p.vy += 0.015 * dt;
+            p.x += p.vx * (dt/16.7);
+            p.y += p.vy * (dt/16.7);
+            p.vx *= 0.99;
+            p.vy *= 0.99;
+
+            fctx.beginPath();
+            fctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            fctx.fillStyle = `rgba(207,239,255,${0.85*a})`;
+            fctx.fill();
+          }
+        }
+
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      // ===== Input =====
+      function getPointerPos(e) {
+        const rect = fx.getBoundingClientRect();
+        const x = (e.clientX - rect.left);
+        const y = (e.clientY - rect.top);
+        return { x, y };
+      }
+
+      fx.addEventListener('pointerdown', (e) => {
+        if (!running || paused || lost) return;
+
+        const { x, y } = getPointerPos(e);
+        const ok = hitRock(x, y);
+
+        if (ok) {
+          burst(x, y, 18);
+        } else {
+          missesStreak++;
+          updateMissesUI();
+          burst(x, y, 10);
+
+          if (missesStreak >= MAX_MISSES) {
+            lose('miss_clicks');
+          }
+        }
+      }, { passive: true });
+
+      // ===== UI =====
+      function startMine(level) {
+        if (level !== 1) {
+          showToast('Этот уровень пока недоступен ❄️');
+          return;
+        }
+        currentMineName = 'Ледяные шахты нортленда';
+        resetGame();
+      }
+
+      mine1.addEventListener('click', () => startMine(1));
+      mine2.addEventListener('click', () => startMine(2));
+      mine3.addEventListener('click', () => startMine(3));
+      mine4.addEventListener('click', () => startMine(4));
+      mine5.addEventListener('click', () => startMine(5));
+
+      howBtn.addEventListener('click', () => {
+        hideAllPanels();
+        howPanel.classList.remove('hidden');
+      });
+      backBtn.addEventListener('click', () => {
+        hideAllPanels();
+        menuPanel.classList.remove('hidden');
+      });
+
+      againBtn.addEventListener('click', () => resetGame());
+      toMenuBtn.addEventListener('click', showMenu);
+
+      pauseBtn.addEventListener('click', () => togglePause());
+      restartBtn.addEventListener('click', () => resetGame());
+      resumeBtn.addEventListener('click', () => togglePause(false));
+      pauseRestartBtn.addEventListener('click', () => resetGame());
+
+      window.addEventListener('keydown', (e) => {
+        const k = e.key.toLowerCase();
+        if (k === 'p') togglePause();
+        if (k === 'r') resetGame();
+        if (k === 'escape') showMenu();
+        if (k === ' ' || k === 'enter') {
+          if (!running && !lost) startMine(1);
+          else if (paused) togglePause(false);
+        }
+      });
+
+      // Стартовое меню
+      showMenu();
+      updateMissesUI();
+    })();
+  </script>
+</body>
+</html>
