@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Другое — Монстр</title>
+  <style>
+    :root{
+      --bg1:#061220; --bg2:#0a2a3d;
+      --ice:#cfefff; --ice2:#9fd8ff;
+      --danger:#ff6b6b; --ok:#65ffb2;
+      --shadow: rgba(0,0,0,.35);
+    }
+    *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color: transparent; }
+    html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#eaf7ff; }
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 30% 20%, rgba(159,216,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 80% 10%, rgba(207,239,255,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+    .hud{
+      position:fixed; top:16px; left:16px; right:16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .pill{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px var(--shadow);
+      border: 1px solid rgba(207,239,255,.18);
+      flex-wrap:wrap;
+    }
+    .big{ font-weight:900; font-size:20px; letter-spacing:.2px; }
+    .tiny{ opacity:.9; font-size:12px; letter-spacing:.2px; }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(207,239,255,.22);
+      color:#eaf7ff;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow: 0 10px 25px var(--shadow);
+      font-weight:700;
+      transition: transform .12s ease, border-color .12s ease, opacity .12s ease;
+      white-space:nowrap;
+    }
+    button:hover{ border-color: rgba(207,239,255,.35); transform: translateY(-1px); }
+    button:active{ transform: translateY(0px); }
+
+    .center{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .panel{
+      width:min(700px, 100%);
+      border-radius:22px;
+      background: rgba(6,18,32,.55);
+      border: 1px solid rgba(207,239,255,.20);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(14px);
+      padding:18px 18px 14px;
+      overflow:hidden;
+    }
+    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+    .status{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(207,239,255,.16);
+      background: rgba(6,18,32,.35);
+      font-size:13px;
+      opacity:.95;
+      line-height:1.45;
+    }
+    .status b{ color: var(--ice2); }
+
+    .bar{
+      height:12px; border-radius:999px;
+      background: rgba(255,255,255,0.08);
+      overflow:hidden; margin-top:12px;
+      border:1px solid rgba(207,239,255,.14);
+      display:none;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: rgba(255,107,107,0.75);
+      transition: width .06s linear;
+    }
+
+    .overlay{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(8px);
+      padding:18px;
+    }
+    .overlay.show{ display:flex; }
+    .overlay .panel{ max-width:560px; }
+    .ok{ color: var(--ok); }
+    .bad{ color: var(--danger); }
+    .hint{ margin-top:10px; line-height:1.45; opacity:.92; }
+  </style>
+</head>
+<body>
+
+  <div class="hud">
+    <div class="pill">
+      <div class="big">Другое: Монстр</div>
+      <div class="tiny">Время: <span id="elapsed">00:00:00</span></div>
+      <div class="tiny">Ошибки пробела: <span id="misses">0</span>/3</div>
+      <div class="tiny" id="audioState">звук: (не активирован)</div>
+    </div>
+    <div class="btnRow">
+      <button id="pauseBtn" title="P">Пауза</button>
+      <button id="backBtn" title="Esc">В меню</button>
+      <button id="sfxBtn">Звук: ON</button>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="panel">
+      <div class="row">
+        <div class="tiny" style="max-width:560px;">
+          Монстр приходит сам по себе (каждый раз через <b>случайные 2–5 минут</b>).
+          Когда пришёл — у тебя <b>20 секунд</b> нажать <b>ПРОБЕЛ</b>.
+          Если нажмёшь <b>пробел не вовремя 3 раза подряд</b> — проигрыш.
+        </div>
+        <div class="tiny">P — пауза • Esc — меню</div>
+      </div>
+
+      <div class="status" id="status">
+        Статус: <b>нажми где угодно</b>, чтобы включить звук и начать.
+      </div>
+
+      <!-- Только таймер монстра (когда активен) -->
+      <div class="bar" id="monsterBar"><div></div></div>
+
+      <div class="hint tiny" style="margin-top:12px; opacity:.75;">
+        Во время таймера монстра слышны очень тихие шаги по снегу. Пробел вовремя — “горн”.
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="pauseOverlay">
+    <div class="panel">
+      <div class="big">Пауза</div>
+      <p class="hint">Нажми <b>P</b>, чтобы продолжить.</p>
+      <div class="btnRow" style="margin-top:10px;">
+        <button id="resumeBtn">Продолжить</button>
+        <button id="restartBtn">Рестарт</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="loseOverlay">
+    <div class="panel">
+      <div class="big bad">Поражение ❌</div>
+      <p class="hint" id="loseText">—</p>
+      <div class="btnRow" style="margin-top:10px;">
+        <button id="tryBtn">Ещё раз</button>
+        <button id="menuBtn">В меню</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ====== UI ======
+  const elapsedEl = document.getElementById('elapsed');
+  const missesEl = document.getElementById('misses');
+  const statusEl  = document.getElementById('status');
+  const audioStateEl = document.getElementById('audioState');
+
+  const monsterBar = document.getElementById('monsterBar');
+  const monsterFill = monsterBar.firstElementChild;
+
+  const pauseOverlay = document.getElementById('pauseOverlay');
+  const loseOverlay  = document.getElementById('loseOverlay');
+  const loseText     = document.getElementById('loseText');
+
+  const pauseBtn = document.getElementById('pauseBtn');
+  const backBtn = document.getElementById('backBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const sfxBtn = document.getElementById('sfxBtn');
+  const tryBtn = document.getElementById('tryBtn');
+  const menuBtn = document.getElementById('menuBtn');
+
+  // ====== Config ======
+  const MONSTER_WINDOW_MS = 20000;
+  const MIN_INTERVAL_MS = 30 * 1000;
+  const MAX_INTERVAL_MS = 3 * 60 * 1000;
+
+  // ====== Helpers ======
+  const rand = (a,b)=> Math.random()*(b-a)+a;
+  const clamp01 = (v)=> Math.max(0, Math.min(1, v));
+  const pad2 = (n)=> String(n).padStart(2,'0');
+
+  function formatElapsed(ms){
+    const s = Math.floor(ms/1000);
+    const hh = Math.floor(s/3600);
+    const mm = Math.floor((s%3600)/60);
+    const ss = s%60;
+    return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+  }
+
+  function setStatus(html){ statusEl.innerHTML = html; }
+
+  // ====== Audio (WebAudio) ======
+  let audioCtx = null;
+  let master = null;
+  let sfxGain = null;
+  let sfxOn = true;
+
+  // шаги
+  let footstepTimer = null;
+
+  function ensureAudio(){
+    if (audioCtx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+    master = audioCtx.createGain();
+    master.gain.value = 0.9;
+
+    sfxGain = audioCtx.createGain();
+    sfxGain.gain.value = 1.0;
+    sfxGain.connect(master);
+    master.connect(audioCtx.destination);
+  }
+
+  async function resumeAudio(){
+    ensureAudio();
+    if (audioCtx.state !== 'running') {
+      try { await audioCtx.resume(); } catch {}
+    }
+    audioStateEl.textContent = `звук: ${audioCtx.state}`;
+  }
+
+  function playHornBlow(){
+    if (!sfxOn) return;
+    ensureAudio();
+    const t = audioCtx.currentTime;
+
+    // “дуешь в горн”: низкий тон + шум воздуха
+    const dur = 0.55;
+
+    const o1 = audioCtx.createOscillator();
+    const o2 = audioCtx.createOscillator();
+    o1.type = 'sawtooth';
+    o2.type = 'triangle';
+
+    // “горн” (подстрой по вкусу)
+    o1.frequency.setValueAtTime(220, t);
+    o2.frequency.setValueAtTime(110, t);
+    o1.frequency.exponentialRampToValueAtTime(196, t + dur);
+    o2.frequency.exponentialRampToValueAtTime(98,  t + dur);
+
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.55, t + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(900, t);
+    lp.Q.setValueAtTime(0.9, t);
+
+    // “дыхание” (шум)
+    const nbuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
+    const data = nbuf.getChannelData(0);
+    for (let i=0;i<data.length;i++){
+      data[i] = (Math.random()*2-1) * 0.6;
+    }
+    const nsrc = audioCtx.createBufferSource();
+    nsrc.buffer = nbuf;
+
+    const nhp = audioCtx.createBiquadFilter();
+    nhp.type = 'highpass';
+    nhp.frequency.setValueAtTime(280, t);
+
+    const ng = audioCtx.createGain();
+    ng.gain.setValueAtTime(0.0001, t);
+    ng.gain.exponentialRampToValueAtTime(0.35, t + 0.03);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    // микс
+    o1.connect(lp); o2.connect(lp);
+    lp.connect(g); g.connect(sfxGain);
+
+    nsrc.connect(nhp); nhp.connect(ng); ng.connect(sfxGain);
+
+    o1.start(t); o2.start(t);
+    o1.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
+
+    nsrc.start(t);
+    nsrc.stop(t + dur + 0.02);
+  }
+
+  function playSoftSnowStep(){
+    if (!sfxOn) return;
+    ensureAudio();
+    const t = audioCtx.currentTime;
+
+    // очень тихий “шаг по снегу”: короткий шум + фильтры
+    const dur = 0.12;
+
+    const buffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i=0;i<data.length;i++){
+      const env = 1 - i/data.length;
+      data[i] = (Math.random()*2-1) * env * 0.8;
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(420, t);
+    bp.Q.setValueAtTime(0.8, t);
+
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(900, t);
+
+    const g = audioCtx.createGain();
+    // прям еле слышно:
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.06, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    src.connect(bp); bp.connect(lp); lp.connect(g); g.connect(sfxGain);
+
+    src.start(t);
+    src.stop(t + dur + 0.02);
+  }
+
+  function startFootstepsLoop(){
+    stopFootstepsLoop();
+    // шаги “не ровно”, чтобы было живее
+    footstepTimer = setInterval(()=>{
+      if (!monsterActive || paused || lost) return;
+      playSoftSnowStep();
+      // иногда второй быстрый “шорк”
+      if (Math.random() < 0.18) {
+        setTimeout(()=> {
+          if (!monsterActive || paused || lost) return;
+          playSoftSnowStep();
+        }, 90 + Math.random()*70);
+      }
+    }, 320 + Math.random()*220);
+  }
+
+  function stopFootstepsLoop(){
+    if (footstepTimer){
+      clearInterval(footstepTimer);
+      footstepTimer = null;
+    }
+  }
+
+  // ====== Game state ======
+  let started = false;
+  let paused = false;
+  let lost = false;
+
+  let startTime = 0;          // для бесконечного таймера
+  let nextMonsterAt = 0;      // когда появится следующий (абсолютное время performance.now)
+  let monsterActive = false;  // монстр сейчас идёт
+  let monsterStart = 0;       // когда начались 20 секунд
+
+  let missSpaceStreak = 0;    // 3 промаха подряд = поражение
+
+  function scheduleNextMonster(now){
+    // каждый раз новое случайное время 2..5 минут
+    nextMonsterAt = now + rand(MIN_INTERVAL_MS, MAX_INTERVAL_MS);
+  }
+
+  function showMonster(now){
+    monsterActive = true;
+    monsterStart = now;
+    monsterBar.style.display = '';
+    monsterFill.style.width = '100%';
+
+    setStatus(`Статус: <b class="bad">монстр рядом</b> — у тебя 20 секунд! Нажми <b>ПРОБЕЛ</b>.`);
+
+    // тихие шаги по снегу пока идёт таймер монстра
+    startFootstepsLoop();
+  }
+
+  function hideMonster(){
+    monsterActive = false;
+    monsterBar.style.display = 'none';
+    stopFootstepsLoop();
+  }
+
+  function winMonster(now){
+    // убил — звук горна, монстр уходит, таймер времени НЕ сбрасываем
+    playHornBlow();
+    hideMonster();
+    missSpaceStreak = 0; // можно обнулить серию ошибок после успеха
+    missesEl.textContent = String(missSpaceStreak);
+
+    setStatus(`Статус: <b class="ok">монстр убит</b>. Следующий придёт сам по себе позже.`);
+    scheduleNextMonster(now);
+  }
+
+  function loseGame(reason){
+    lost = true;
+    hideMonster();
+    setPaused(false);
+
+    loseText.textContent = reason;
+    loseOverlay.classList.add('show');
+    setStatus(`Статус: <b class="bad">поражение</b>.`);
+  }
+
+  function setPaused(v){
+    paused = v;
+    pauseOverlay.classList.toggle('show', paused);
+  }
+
+  function goMenu(){
+    // поменяй имя главного файла если у тебя не index.html
+    window.location.href = 'index.html';
+  }
+
+  function resetRun(){
+    loseOverlay.classList.remove('show');
+    lost = false;
+    paused = false;
+    setPaused(false);
+
+    missSpaceStreak = 0;
+    missesEl.textContent = String(missSpaceStreak);
+
+    const now = performance.now();
+    startTime = now;
+    hideMonster();
+    scheduleNextMonster(now);
+
+    setStatus(`Статус: <b>ожидание</b>… Монстр может прийти в любой момент. Слушай.`);
+  }
+
+  // ====== Boot (первое взаимодействие) ======
+  async function boot(){
+    if (started) return;
+    started = true;
+    await resumeAudio();
+    resetRun();
+  }
+  window.addEventListener('pointerdown', boot, { once:true });
+  window.addEventListener('keydown', boot, { once:true });
+
+  // ====== Loop ======
+  let last = performance.now();
+  function tick(now){
+    const dt = Math.min(60, now - last);
+    last = now;
+
+    if (started){
+      // бесконечный таймер времени
+      elapsedEl.textContent = formatElapsed(now - startTime);
+
+      if (!paused && !lost){
+        // проверяем: пора ли появиться монстру
+        if (!monsterActive && now >= nextMonsterAt){
+          showMonster(now);
+        }
+
+        // если монстр активен — обновляем 20-сек бар и проверяем проигрыш по времени
+        if (monsterActive){
+          const p = clamp01((now - monsterStart) / MONSTER_WINDOW_MS);
+          monsterFill.style.width = ((1 - p) * 100).toFixed(2) + '%';
+
+          if (now - monsterStart >= MONSTER_WINDOW_MS){
+            loseGame('Ты не успел за 20 секунд — монстр дошёл.');
+          }
+        }
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ====== Input ======
+  function onSpacePress(now){
+    if (!started || paused || lost) return;
+
+    if (monsterActive){
+      // вовремя -> победа
+      winMonster(now);
+      return;
+    }
+
+    // не вовремя -> серия ошибок
+    missSpaceStreak++;
+    missesEl.textContent = String(missSpaceStreak);
+
+    setStatus(`Статус: <b>ожидание</b>… (Пробел мимо: <b class="bad">${missSpaceStreak}/3</b>)`);
+
+    if (missSpaceStreak >= 3){
+      loseGame('Ты нажал пробел не вовремя 3 раза подряд.');
+    }
+  }
+
+  window.addEventListener('keydown', (e)=>{
+    const k = e.key.toLowerCase();
+    const now = performance.now();
+
+    if (k === 'p'){
+      if (!started || lost) return;
+      setPaused(!paused);
+      e.preventDefault();
+      return;
+    }
+    if (k === 'escape'){
+      goMenu();
+      e.preventDefault();
+      return;
+    }
+    if (k === ' ' || k === 'spacebar'){
+      onSpacePress(now);
+      e.preventDefault();
+      return;
+    }
+  }, {passive:false});
+
+  // ====== Buttons ======
+  pauseBtn.addEventListener('click', ()=>{
+    if (!started || lost) return;
+    setPaused(!paused);
+  });
+  backBtn.addEventListener('click', goMenu);
+
+  resumeBtn.addEventListener('click', ()=> setPaused(false));
+  restartBtn.addEventListener('click', ()=> resetRun());
+
+  tryBtn.addEventListener('click', ()=> resetRun());
+  menuBtn.addEventListener('click', goMenu);
+
+  sfxBtn.addEventListener('click', async ()=>{
+    await resumeAudio();
+    sfxOn = !sfxOn;
+    sfxBtn.textContent = `Звук: ${sfxOn ? 'ON' : 'OFF'}`;
+    if (!sfxOn) stopFootstepsLoop();
+    else if (monsterActive && !paused && !lost) startFootstepsLoop();
+  });
+
+})();
+</script>
+</body>
+</html>
