@@ -422,7 +422,7 @@
       </div>
       <p><b>Шахты:</b> 🖱️ кликай по камням. 5 промахов подряд — поражение.</p>
       <p><b>Лесопилка:</b> ⌨️ жми <b>A</b> (удар слева) или <b>D</b> (удар справа) — пока есть время.</p>
-      <p><b>Кузница:</b> 🖱️ перетащи руду → ⌨️ W/A/S/D (иногда <b>D D</b>) → 🌀 вентилятор 15 оборотов за 3с.</p>
+      <p><b>Кузница:</b> 🖱️ перетащи руду → ⌨️ W/A/S/D (иногда <b>D D</b>) → 🌀 вентилятор 15 оборотов за 3с. Иногда появляется индикатор в другом месте — жми <b>Пробел</b> быстро.</p>
       <p><b>Сбор трав — морозная:</b> 🖱️ зажми и <b>проведи</b> по траве чтобы срезать. Долго держать зажатым — поражение. ⌨️ Жми <b>Пробел</b>, иначе за 3 секунды экран побелеет → поражение.</p>
       <p><b>Сбор трав — огненный куст:</b> 🖱️ кликай по ягодам на кусте — они падают. 🧺 Передвигай корзину мышкой/пальцем (или A/D) и лови. Если ягода упала мимо — поражение. Время раунда ограничено.</p>
       <p>⌨️ <b>P</b> — пауза, <b>R</b> — рестарт, <b>Esc</b> — в меню.</p>
@@ -854,17 +854,15 @@
         }
 
         if(mode==='herbs_fire'){
-          // fiery vibe tint
           const h = bctx.createRadialGradient(W*0.62, H*0.78, 10, W*0.62, H*0.78, Math.max(W,H)*0.9);
           h.addColorStop(0,'rgba(255,120,60,0.18)');
           h.addColorStop(1,'rgba(0,0,0,0)');
           bctx.fillStyle=h; bctx.fillRect(0,0,W,H);
 
-          // embers rising
           for(const e of embers){
             e.wob += e.wobSpd;
             e.x += e.vx + Math.sin(e.wob)*0.25;
-            e.y -= e.vy; // upward
+            e.y -= e.vy;
             if (e.y < -20) { e.y = H + 20; e.x = rand(0, W); e.heat = rand(0,1); }
             if (e.x < -10) e.x = W + 10;
             if (e.x > W + 10) e.x = -10;
@@ -879,7 +877,6 @@
           return;
         }
 
-        // default snowflakes (all other modes except forge & herbs_fire)
         for(const f of flakes){
           f.wob += f.wobSpd;
           f.x += f.vx + Math.sin(f.wob)*0.25;
@@ -1070,6 +1067,7 @@
         else if (reason==='forge_timeout') loseReasonEl.textContent = 'Не уложился по времени.';
         else if (reason==='forge_wrong_key') loseReasonEl.textContent = 'Нажал не ту кнопку.';
         else if (reason==='forge_fan_fail') loseReasonEl.textContent = 'Не успел поймать/прокрутить вентилятор.';
+        else if (reason==='forge_space_missed') loseReasonEl.textContent = 'Не успел нажать ПРОБЕЛ по индикатору!';
         else if (reason==='herb_hold') loseReasonEl.textContent = 'Слишком долго держал зажатой кнопку.';
         else if (reason==='herb_missed') loseReasonEl.textContent = 'Трава ушла — не успел срезать.';
         else if (reason==='snowed') loseReasonEl.textContent = 'Тебя занесло снегом. Нужно было жать пробел!';
@@ -1090,7 +1088,7 @@
           statsLine.textContent = `Успешных руд: ${smashed}, темп: ${difficulty.toFixed(2)}×`;
         } else if(mode==='herbs'){
           statsLine.textContent = `Трав: ${spawned}, срезано: ${smashed} (${acc}%).`;
-        } else { // herbs_fire
+        } else {
           statsLine.textContent = `Ягод поймано: ${smashed}, раундов: ${fireRoundNumber}`;
         }
 
@@ -1500,7 +1498,7 @@
       let qteIndex = 0;
       let qteKeyDeadline = 0;
 
-      const QTE_MISTAKES_ALLOWED = 1;
+      const QTE_MISTAKES_ALLOWED = 0; // ❌ без доп.жизни
       let qteMistakes = 0;
       let qteRepeatPressed = 0; // для "D D"
 
@@ -1523,6 +1521,107 @@
         caughtAt:0,
         totalLimit:FAN_TOTAL_MS
       };
+
+      // --- Forge: индикатор SPACE (если не нажал — поражение) ---
+      let forgeSpace = {
+        active:false,
+        x:0, y:0,
+        born:0,
+        ttl:10000,
+        nextAt:0
+      };
+
+      function forgeSpaceSchedule(now){
+        const k = clamp01((difficulty-1)/7);
+        const minI = Math.max(600, 1700 - k*800);
+        const maxI = Math.max(1100, 3400 - k*1400);
+        forgeSpace.nextAt = now + rand(minI, maxI);
+      }
+
+      function forgeSpaceSpawn(now){
+        const pad = 62;
+        forgeSpace.active = true;
+        forgeSpace.born = now;
+        forgeSpace.ttl = 1100 + rand(-120, 220);
+        forgeSpace.x = rand(pad, W - pad);
+        forgeSpace.y = rand(pad + 80, H - pad - 50);
+      }
+
+      function forgeSpaceReset(now){
+        forgeSpace.active = false;
+        forgeSpace.born = 0;
+        forgeSpaceSchedule(now);
+      }
+function drawForgeSpaceIndicator(now){
+  if(!forgeSpace.active) return;
+
+  const t = (now - forgeSpace.born) / forgeSpace.ttl; // 0..1
+  const k = clamp01(t);
+  const a = 1 - k;
+
+  // лёгкая пульсация
+  const pulse = 1 + Math.sin(now*0.004)*0.03;
+
+  fctx.save();
+
+  // ===== FULLSCREEN затемнение + "тревога" =====
+  // бело-зелёная вспышка по краям
+  const vign = fctx.createRadialGradient(W*0.5, H*0.5, Math.min(W,H)*0.10, W*0.5, H*0.5, Math.max(W,H)*0.75);
+  vign.addColorStop(0, `rgba(0,0,0,${0.15*a})`);
+  vign.addColorStop(1, `rgba(90,255,190,${0.22*a})`);
+  fctx.fillStyle = vign;
+  fctx.fillRect(0,0,W,H);
+
+  // полупрозрачный слой поверх
+  fctx.fillStyle = `rgba(0,0,0,${0.45*a})`;
+  fctx.fillRect(0,0,W,H);
+
+  // ===== ЦЕНТРАЛЬНЫЙ ТЕКСТ ОГРОМНЫЙ =====
+  const cx = W*0.5, cy = H*0.5;
+
+  fctx.translate(cx, cy);
+  fctx.scale(pulse, pulse);
+
+  // огромный текст "ПРОБЕЛ"
+  fctx.textAlign = 'center';
+  fctx.textBaseline = 'middle';
+
+  // тень/подложка
+  fctx.font = `1000 ${Math.floor(Math.min(W,H)*0.12)}px system-ui`; // ~12% экрана
+  fctx.lineWidth = Math.max(10, Math.floor(Math.min(W,H)*0.01));
+  fctx.strokeStyle = `rgba(0,0,0,${0.65*a})`;
+  fctx.strokeText('ПРОБЕЛ', 0, -10);
+
+  fctx.fillStyle = `rgba(240,255,250,${0.98*a})`;
+  fctx.fillText('ПРОБЕЛ', 0, -10);
+
+  // подпись
+  fctx.font = `900 ${Math.floor(Math.min(W,H)*0.045)}px system-ui`; // ~4.5% экрана
+  fctx.fillStyle = `rgba(90,255,190,${0.95*a})`;
+  fctx.fillText('ЖМИ БЫСТРО!', 0, Math.min(W,H)*0.10);
+
+  // ===== ОГРОМНОЕ КОЛЬЦО-ТАЙМЕР (почти на весь экран) =====
+  const R = Math.min(W,H)*0.38; // радиус почти на весь экран
+  const start = -Math.PI/2;
+
+  // фон кольца
+  fctx.beginPath();
+  fctx.arc(0,0,R,0,Math.PI*2);
+  fctx.lineWidth = Math.max(14, Math.floor(Math.min(W,H)*0.012));
+  fctx.strokeStyle = `rgba(255,255,255,${0.10*a})`;
+  fctx.stroke();
+
+  // прогресс (уменьшается)
+  fctx.beginPath();
+  fctx.arc(0,0,R,start,start + Math.PI*2*(1-k));
+  fctx.lineWidth = Math.max(18, Math.floor(Math.min(W,H)*0.016));
+  fctx.strokeStyle = `rgba(255,200,120,${0.85*a})`;
+  fctx.stroke();
+
+  fctx.restore();
+}
+
+
 
       function forgeLayout(){
         const anW = Math.min(520, Math.max(340, W*0.62));
@@ -1910,6 +2009,9 @@
           fctx.fill();
         }
 
+        // ✅ рисуем индикатор SPACE поверх сцены (если активен)
+        drawForgeSpaceIndicator(now);
+
         fctx.restore();
 
         function drawFan(now){
@@ -2172,7 +2274,7 @@
 
       // ---------- Herbs Mode 2 (Fire bush + berries + basket) ----------
       let fireBush = { x:0, y:0, w:0, h:0 };
-      let fireBerries = []; // {x,y,r, state:'rest'|'fall', vy}
+      let fireBerries = [];
       let basket = { x:0, y:0, w:0, h:0 };
       let fireRoundLimit = 0;
       let fireRoundStart = 0;
@@ -2360,7 +2462,6 @@
       }
 
       function fireUpdate(now, dt){
-        // ✅ NEW: ягода может сама начать падать случайно
         for(const b of fireBerries){
           if(b.state === 'rest'){
             const chance = 0.0006 + difficulty * 0.00025;
@@ -2374,7 +2475,6 @@
           }
         }
 
-        // time limit
         if(now - fireRoundStart > fireRoundLimit){
           lose('fire_timeout');
           return;
@@ -2401,7 +2501,6 @@
               missesStreak=0;
               updateMissesUI();
 
-              // ✅ NEW: +0.25с за каждую пойманную ягодку
               fireRoundLimit += 250;
 
               fireBurst(b.x,b.y,18);
@@ -2617,13 +2716,7 @@
         const per = Math.max(420, 900/(0.85 + difficulty*0.55));
 
         if(now > qteKeyDeadline){
-          if(qteMistakes < QTE_MISTAKES_ALLOWED){
-            qteMistakes++;
-            qteKeyDeadline = now + per;
-            shakePower = 0.4;
-            shakeUntil = now + 90;
-            return;
-          }
+          // ❌ без доп.жизни: сразу поражение
           lose('forge_timeout');
           return;
         }
@@ -2633,13 +2726,6 @@
 
         if(cur.length === 1){
           if(key !== cur){
-            if(qteMistakes < QTE_MISTAKES_ALLOWED){
-              qteMistakes++;
-              qteKeyDeadline = now + per;
-              shakePower = 0.5;
-              shakeUntil = now + 100;
-              return;
-            }
             lose('forge_wrong_key');
             return;
           }
@@ -2659,13 +2745,6 @@
         const kcur = cur[0];
 
         if(key !== kcur){
-          if(qteMistakes < QTE_MISTAKES_ALLOWED){
-            qteMistakes++;
-            qteKeyDeadline = now + per;
-            shakePower = 0.5;
-            shakeUntil = now + 110;
-            return;
-          }
           lose('forge_wrong_key');
           return;
         }
@@ -2727,13 +2806,8 @@
               if(now - countdownStart >= COUNTDOWN_MS) forgeStartQTE(now);
             } else if(forgePhase==='qte'){
               if(now > qteKeyDeadline){
-                if(qteMistakes < QTE_MISTAKES_ALLOWED){
-                  qteMistakes++;
-                  const per = Math.max(420, 900/(0.85 + difficulty*0.55));
-                  qteKeyDeadline = now + per;
-                } else {
-                  lose('forge_timeout');
-                }
+                // ❌ без доп.жизни: таймер вышел — поражение
+                lose('forge_timeout');
               }
             } else if(forgePhase==='fan'){
               const elapsedTotal = now - fan.spawnedAt;
@@ -2746,6 +2820,20 @@
               }
               fan.omega *= Math.pow(0.985, dt/16.7);
             }
+
+            // --- Forge SPACE индикатор ---
+            if(!forgeSpace.nextAt) forgeSpaceSchedule(now);
+
+            const canShowSpace = (forgePhase==='qte' || forgePhase==='fan');
+            if(canShowSpace && !forgeSpace.active && now >= forgeSpace.nextAt){
+              forgeSpaceSpawn(now);
+            }
+            if(forgeSpace.active){
+              if(now - forgeSpace.born >= forgeSpace.ttl){
+                lose('forge_space_missed'); // ❌ не успел — поражение
+              }
+            }
+
             drawForgeScene(now);
           } else if(mode==='herbs'){
             if(herbPointerDown){
@@ -2829,6 +2917,9 @@
         forgePhase='idle';
         ore=null;
         forgeResetRound();
+
+        // ✅ сброс индикатора SPACE
+        forgeSpaceReset(performance.now());
 
         if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
       }
@@ -2958,6 +3049,15 @@
             snowWhite = 0;
             if(audioCtx && audioCtx.state==='running') playHerbSlice(0.45);
           }
+
+          // ✅ Forge: если индикатор активен — просто “погасить”, без бонусов
+          if(mode==='forge' && running && !paused && !lost){
+            if(forgeSpace.active){
+              forgeSpace.active = false;
+              forgeSpaceSchedule(now);
+            }
+          }
+
           e.preventDefault();
         }
 
@@ -2993,4 +3093,3 @@
   </script>
 </body>
 </html>
-
