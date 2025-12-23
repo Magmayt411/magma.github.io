@@ -277,6 +277,11 @@
           <div class="topline"><div class="name">Сбор трав</div><div class="chip">2 режима</div></div>
           <div class="sub">Морозная трава + огненный куст с ягодами.</div>
         </button>
+<button class="cardBtn" id="goOther">
+  <div class="topline"><div class="name">Другое</div><div class="chip">новое</div></div>
+  <div class="sub">Редкие сигналы: слушай звук и жми пробел до ворот.</div>
+</button>
+
       </div>
       <div class="actions">
         <button id="howBtn">Управление</button>
@@ -488,6 +493,8 @@
       const goForest = document.getElementById('goForest');
       const goForge = document.getElementById('goForge');
       const goHerbs = document.getElementById('goHerbs');
+const goOther = document.getElementById('goOther');
+
 
       const backToMainFromMines = document.getElementById('backToMainFromMines');
       const backToMainFromForest = document.getElementById('backToMainFromForest');
@@ -2964,6 +2971,9 @@ function drawForgeSpaceIndicator(now){
       goForest.addEventListener('click', showForestMenu);
       goForge.addEventListener('click', showForgePass);
       goHerbs.addEventListener('click', showHerbsMenu);
+goOther.addEventListener('click', ()=> {
+  window.location.href = 'other_gate_timer.html';
+});
 
       backToMainFromMines.addEventListener('click', showMainMenu);
       backToMainFromForest.addEventListener('click', showMainMenu);
