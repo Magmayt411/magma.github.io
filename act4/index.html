@@ -198,6 +198,15 @@
     }
     .herbBtn:hover{ border-color: rgba(159,216,255,.35); }
 
+    .fireHerbBtn{
+      border-color: rgba(255,195,140,.22);
+      background:
+        radial-gradient(520px 220px at 25% 0%, rgba(255,165,72,.16), transparent 62%),
+        radial-gradient(520px 220px at 90% 10%, rgba(255,214,120,.12), transparent 62%),
+        rgba(6,18,32,.30);
+    }
+    .fireHerbBtn:hover{ border-color: rgba(255,195,140,.35); }
+
     .inputRow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
     input{
       flex:1 1 180px;
@@ -265,8 +274,8 @@
           <div class="sub">Доступ по коду. Ковка и испытания.</div>
         </button>
         <button class="cardBtn herbBtn" id="goHerbs">
-          <div class="topline"><div class="name">Сбор трав</div><div class="chip">доступно</div></div>
-          <div class="sub">Режь морозную траву как в Fruit Ninja + жми пробел от снега.</div>
+          <div class="topline"><div class="name">Сбор трав</div><div class="chip">2 режима</div></div>
+          <div class="sub">Морозная трава + огненный куст с ягодами.</div>
         </button>
       </div>
       <div class="actions">
@@ -289,9 +298,9 @@
           </div>
           <div class="sub">Кликай по камням до того, как они исчезнут.</div>
         </button>
-        <button class="cardBtn mine" id="mine2" disabled>
-          <div class="topline"><div class="name">Шахта 2</div><div class="chip">🔒 скоро</div></div>
-          <div class="sub">Пока недоступно.</div>
+        <button class="cardBtn mine" id="mine2">
+          <div class="topline"><div class="name">Шахта 2</div><div class="chip">Глубокие шахты нортленда</div></div>
+          <div class="sub">Ох зря вы сюда лезете</div>
         </button>
         <button class="cardBtn mine" id="mine3" disabled>
           <div class="topline"><div class="name">Шахта 3</div><div class="chip">🔒 скоро</div></div>
@@ -372,7 +381,7 @@
             <div class="name">Ковать базовое оружие</div>
             <div class="chip">открыто</div>
           </div>
-          <div class="sub">Руда → 3 сек → QTE (иногда 2 кнопки) → Вентилятор.</div>
+          <div class="sub">Руда → 3 сек → QTE (иногда D D) → Вентилятор.</div>
         </button>
         <button class="cardBtn forgeBtn" disabled>
           <div class="topline"><div class="name">Ковка 2</div><div class="chip">🔒 скоро</div></div>
@@ -384,6 +393,28 @@
       </div>
     </div>
 
+    <div class="panel hidden" id="herbsMenuPanel">
+      <div class="title">
+        <h1>Сбор трав</h1>
+        <div class="badge">режимы</div>
+      </div>
+      <p class="big">Что собираем?</p>
+      <p class="tiny">Выбери режим.</p>
+      <div class="grid">
+        <button class="cardBtn herbBtn" id="herbMode1">
+          <div class="topline"><div class="name">Морозная трава</div><div class="chip">доступно</div></div>
+          <div class="sub">Режь как Fruit Ninja + жми пробел от снега.</div>
+        </button>
+        <button class="cardBtn fireHerbBtn" id="herbMode2">
+          <div class="topline"><div class="name">Огненный куст</div><div class="chip">доступно</div></div>
+          <div class="sub">Кликай ягоды → они падают → лови корзиной. С каждым раундом ягод больше.</div>
+        </button>
+      </div>
+      <div class="actions">
+        <button id="backToMainFromHerbsMenu">Назад</button>
+      </div>
+    </div>
+
     <div class="panel hidden" id="howPanel">
       <div class="title">
         <h1>Управление</h1>
@@ -391,8 +422,9 @@
       </div>
       <p><b>Шахты:</b> 🖱️ кликай по камням. 5 промахов подряд — поражение.</p>
       <p><b>Лесопилка:</b> ⌨️ жми <b>A</b> (удар слева) или <b>D</b> (удар справа) — пока есть время.</p>
-      <p><b>Кузница:</b> 🖱️ перетащи руду → ⌨️ W/A/S/D (иногда 2 сразу) → 🌀 вентилятор 15 оборотов за 3с.</p>
-      <p><b>Сбор трав:</b> 🖱️ зажми и <b>проведи</b> по траве чтобы срезать. Долго держать зажатым — поражение. ⌨️ Жми <b>Пробел</b>, иначе за 3 секунды экран побелеет → поражение.</p>
+      <p><b>Кузница:</b> 🖱️ перетащи руду → ⌨️ W/A/S/D (иногда <b>D D</b>) → 🌀 вентилятор 15 оборотов за 3с.</p>
+      <p><b>Сбор трав — морозная:</b> 🖱️ зажми и <b>проведи</b> по траве чтобы срезать. Долго держать зажатым — поражение. ⌨️ Жми <b>Пробел</b>, иначе за 3 секунды экран побелеет → поражение.</p>
+      <p><b>Сбор трав — огненный куст:</b> 🖱️ кликай по ягодам на кусте — они падают. 🧺 Передвигай корзину мышкой/пальцем (или A/D) и лови. Если ягода упала мимо — поражение. Время раунда ограничено.</p>
       <p>⌨️ <b>P</b> — пауза, <b>R</b> — рестарт, <b>Esc</b> — в меню.</p>
       <div class="actions">
         <button class="primary" id="backBtn">Назад</button>
@@ -450,6 +482,7 @@
       const pausePanel = document.getElementById('pausePanel');
       const forgePassPanel = document.getElementById('forgePassPanel');
       const forgeMenuPanel = document.getElementById('forgeMenuPanel');
+      const herbsMenuPanel = document.getElementById('herbsMenuPanel');
 
       const goMines = document.getElementById('goMines');
       const goForest = document.getElementById('goForest');
@@ -460,6 +493,7 @@
       const backToMainFromForest = document.getElementById('backToMainFromForest');
       const backToMainFromForgePass = document.getElementById('backToMainFromForgePass');
       const backToMainFromForgeMenu = document.getElementById('backToMainFromForgeMenu');
+      const backToMainFromHerbsMenu = document.getElementById('backToMainFromHerbsMenu');
 
       const howBtn = document.getElementById('howBtn');
       const backBtn = document.getElementById('backBtn');
@@ -481,6 +515,9 @@
       const forgeEnterBtn = document.getElementById('forgeEnterBtn');
       const toastForgePass = document.getElementById('toastForgePass');
       const forgeBasic = document.getElementById('forgeBasic');
+
+      const herbMode1Btn = document.getElementById('herbMode1');
+      const herbMode2Btn = document.getElementById('herbMode2');
 
       const loseReasonEl = document.getElementById('loseReason');
       const finalBadge = document.getElementById('finalBadge');
@@ -644,6 +681,29 @@
         o.connect(og); og.connect(sfxGain);
         o.start(t); o.stop(t+0.09);
       }
+      function playFirePop(intensity=1){
+        if(!sfxOn) return; ensureAudio();
+        const t = audioCtx.currentTime;
+        const o = audioCtx.createOscillator(); o.type='square';
+        o.frequency.setValueAtTime(520 + 220*intensity, t);
+        o.frequency.exponentialRampToValueAtTime(220, t+0.06);
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(0.20*intensity,t+0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+0.08);
+        o.connect(g); g.connect(sfxGain);
+        o.start(t); o.stop(t+0.09);
+
+        const n = clickNoise(0.02);
+        const bp = audioCtx.createBiquadFilter(); bp.type='bandpass';
+        bp.frequency.setValueAtTime(1800, t); bp.Q.setValueAtTime(10, t);
+        const ng = audioCtx.createGain();
+        ng.gain.setValueAtTime(0.0001,t);
+        ng.gain.exponentialRampToValueAtTime(0.12*intensity,t+0.004);
+        ng.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+        n.connect(bp); bp.connect(ng); ng.connect(sfxGain);
+        n.start(t); n.stop(t+0.07);
+      }
 
       function stopMusic(){ if(musicTimer){ clearInterval(musicTimer); musicTimer = null; } }
       function playSynthNote(freq, dur=0.08, vol=0.08){
@@ -651,13 +711,13 @@
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         const lp = audioCtx.createBiquadFilter();
+        const isHerb = (mode==='herbs' || mode==='herbs_fire');
         o.type = (mode==='forest') ? 'triangle' : (mode==='forge' ? 'square' : 'sine');
-        if(mode==='herbs') o.type='sine';
+        if(isHerb) o.type='sine';
         o.frequency.setValueAtTime(freq, t);
         lp.type='lowpass';
-        lp.frequency.setValueAtTime((mode==='forest') ? 2200 : (mode==='forge' ? 1400 : 1600), t);
-        if(mode==='herbs') lp.frequency.setValueAtTime(2400, t);
-        lp.Q.setValueAtTime(0.6, t);
+        lp.frequency.setValueAtTime((mode==='forest') ? 2200 : (mode==='forge' ? 1400 : 1700), t);
+        if(isHerb) lp.frequency.setValueAtTime(2400, t);
         g.gain.setValueAtTime(0.0001, t);
         g.gain.exponentialRampToValueAtTime(vol, t+0.01);
         g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
@@ -670,7 +730,7 @@
         const bp = audioCtx.createBiquadFilter();
         bp.type='bandpass';
         bp.frequency.setValueAtTime((mode==='forest') ? 900 : (mode==='forge' ? 1100 : 1400), t);
-        if(mode==='herbs') bp.frequency.setValueAtTime(1600, t);
+        if(mode==='herbs' || mode==='herbs_fire') bp.frequency.setValueAtTime(1600, t);
         bp.Q.setValueAtTime(6, t);
         const g = audioCtx.createGain();
         g.gain.setValueAtTime(0.0001, t);
@@ -683,25 +743,25 @@
         if(!musicOn) return;
         ensureAudio();
         stopMusic();
+        const isHerb = (mode==='herbs' || mode==='herbs_fire');
         const bpmBase = (mode==='forge') ? 92 : 84;
         let bpm = Math.min(160, bpmBase + difficulty*9);
-        if(mode==='herbs') bpm = Math.min(170, 96 + difficulty*10);
+        if(isHerb) bpm = Math.min(170, 96 + difficulty*10);
         const stepMs = 60000 / bpm / 2;
         musicTimer = setInterval(()=>{
           if(!musicOn || !audioCtx || audioCtx.state !== 'running') return;
           const scale = (mode==='forest') ? [0,2,4,7,9]
                        : (mode==='forge') ? [0,3,5,6,10]
-                       : (mode==='herbs') ? [0,2,5,7,9,12]
+                       : isHerb ? [0,2,5,7,9,12]
                        : [0,3,5,7,10];
-          const root = (mode==='forest') ? 220 : 196;
-          const root2 = (mode==='herbs') ? 246 : root;
+          const root = (mode==='forest') ? 220 : (mode==='herbs_fire' ? 246 : 196);
           const step = (Date.now() / stepMs) | 0;
-          if(step % 4 === 0) playSynthNote(root2/2, 0.10, 0.10);
+          if(step % 4 === 0) playSynthNote(root/2, 0.10, 0.10);
           const density = clamp01((difficulty-1)/6);
           if(Math.random() < 0.35 + density*0.45){
             const deg = scale[(Math.random()*scale.length)|0];
             const octave = (Math.random() < 0.7) ? 1 : 2;
-            const freq = root2 * Math.pow(2, octave) * Math.pow(2, deg/12);
+            const freq = root * Math.pow(2, octave) * Math.pow(2, deg/12);
             playSynthNote(freq, 0.06, 0.08);
           }
           if(Math.random() < 0.18 + density*0.25) playPerc(0.035);
@@ -722,9 +782,11 @@
         fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         initSnow();
         initLeaves();
+        initEmbers();
       }
       window.addEventListener('resize', resize, { passive:true });
 
+      // --- Snowflakes ---
       const flakes = [];
       const FLAKES = 140;
       function initSnow(){
@@ -741,44 +803,98 @@
           });
         }
       }
+
+      // --- Embers (for herbs_fire) ---
+      const embers = [];
+      const EMBERS = 120;
+      function initEmbers(){
+        embers.length = 0;
+        for(let i=0;i<EMBERS;i++){
+          embers.push({
+            x: rand(0,W),
+            y: rand(0,H),
+            r: rand(0.7,2.2),
+            vx: rand(-0.18,0.18),
+            vy: rand(0.55,1.45),
+            a: rand(0.20,0.75),
+            heat: rand(0.0,1.0),
+            wob: rand(0,Math.PI*2),
+            wobSpd: rand(0.008,0.022)
+          });
+        }
+      }
+
       function drawBackgroundBase(){
         bctx.clearRect(0,0,W,H);
+
         const baseCol = (mode==='forest')
           ? 'rgba(150,255,196,0.14)'
           : (mode==='forge')
             ? 'rgba(255,195,140,0.16)'
-            : (mode==='herbs')
-              ? 'rgba(120,190,255,0.18)'
-              : 'rgba(159,216,255,0.18)';
+            : (mode==='herbs_fire')
+              ? 'rgba(255,145,70,0.18)'
+              : (mode==='herbs')
+                ? 'rgba(120,190,255,0.18)'
+                : 'rgba(159,216,255,0.18)';
+
         const g = bctx.createRadialGradient(W*0.35, H*0.15, 10, W*0.35, H*0.15, Math.max(W,H)*0.8);
         g.addColorStop(0, baseCol);
         g.addColorStop(1, 'rgba(0,0,0,0)');
         bctx.fillStyle = g;
         bctx.fillRect(0,0,W,H);
 
-        if(mode!=='forge'){
-          for(const f of flakes){
-            f.wob += f.wobSpd;
-            f.x += f.vx + Math.sin(f.wob)*0.25;
-            f.y += f.vy;
-            if (f.y > H + 10) { f.y = -10; f.x = rand(0, W); }
-            if (f.x < -10) f.x = W + 10;
-            if (f.x > W + 10) f.x = -10;
-            bctx.beginPath();
-            bctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-            bctx.fillStyle = `rgba(207,239,255,${f.a})`;
-            bctx.fill();
-          }
-        } else {
+        if(mode==='forge'){
           bctx.fillStyle='rgba(0,0,0,0.20)';
           for(let i=0;i<42;i++){
             bctx.beginPath();
             bctx.arc(rand(0,W), rand(0,H), rand(0.6,1.7), 0, Math.PI*2);
             bctx.fill();
           }
+          return;
+        }
+
+        if(mode==='herbs_fire'){
+          // fiery vibe tint
+          const h = bctx.createRadialGradient(W*0.62, H*0.78, 10, W*0.62, H*0.78, Math.max(W,H)*0.9);
+          h.addColorStop(0,'rgba(255,120,60,0.18)');
+          h.addColorStop(1,'rgba(0,0,0,0)');
+          bctx.fillStyle=h; bctx.fillRect(0,0,W,H);
+
+          // embers rising
+          for(const e of embers){
+            e.wob += e.wobSpd;
+            e.x += e.vx + Math.sin(e.wob)*0.25;
+            e.y -= e.vy; // upward
+            if (e.y < -20) { e.y = H + 20; e.x = rand(0, W); e.heat = rand(0,1); }
+            if (e.x < -10) e.x = W + 10;
+            if (e.x > W + 10) e.x = -10;
+
+            const t = e.heat;
+            const col = `rgba(${Math.round(255)},${Math.round(160 + 60*t)},${Math.round(70 + 40*t)},${e.a})`;
+            bctx.beginPath();
+            bctx.arc(e.x, e.y, e.r*(1 + Math.sin(e.wob)*0.12), 0, Math.PI*2);
+            bctx.fillStyle = col;
+            bctx.fill();
+          }
+          return;
+        }
+
+        // default snowflakes (all other modes except forge & herbs_fire)
+        for(const f of flakes){
+          f.wob += f.wobSpd;
+          f.x += f.vx + Math.sin(f.wob)*0.25;
+          f.y += f.vy;
+          if (f.y > H + 10) { f.y = -10; f.x = rand(0, W); }
+          if (f.x < -10) f.x = W + 10;
+          if (f.x > W + 10) f.x = -10;
+          bctx.beginPath();
+          bctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+          bctx.fillStyle = `rgba(207,239,255,${f.a})`;
+          bctx.fill();
         }
       }
 
+      // Leaves (forest)
       const leaves = [];
       const LEAVES = 55;
       function initLeaves(){
@@ -843,7 +959,7 @@
 
       // ---------- Game state ----------
       let running=false, paused=false, lost=false;
-      let mode='mines';
+      let mode='mines'; // mines | forest | forge | herbs | herbs_fire
 
       let score=0, difficulty=1;
       let lastTime = performance.now();
@@ -876,6 +992,7 @@
         pausePanel.classList.add('hidden');
         forgePassPanel.classList.add('hidden');
         forgeMenuPanel.classList.add('hidden');
+        herbsMenuPanel.classList.add('hidden');
       }
 
       function showMainMenu(){
@@ -920,6 +1037,14 @@
         footerHint.textContent = 'Кузница: выбери режим.';
       }
 
+      function showHerbsMenu(){
+        running=false; paused=false; lost=false;
+        hideAllPanels();
+        overlay.classList.remove('hidden');
+        herbsMenuPanel.classList.remove('hidden');
+        footerHint.textContent = 'Сбор трав: выбери режим.';
+      }
+
       function togglePause(force){
         if (!running && !paused) return;
         paused = (typeof force === 'boolean') ? force : !paused;
@@ -948,6 +1073,8 @@
         else if (reason==='herb_hold') loseReasonEl.textContent = 'Слишком долго держал зажатой кнопку.';
         else if (reason==='herb_missed') loseReasonEl.textContent = 'Трава ушла — не успел срезать.';
         else if (reason==='snowed') loseReasonEl.textContent = 'Тебя занесло снегом. Нужно было жать пробел!';
+        else if (reason==='fire_missed') loseReasonEl.textContent = 'Ягода упала мимо корзины.';
+        else if (reason==='fire_timeout') loseReasonEl.textContent = 'Не успел собрать ягоды вовремя.';
         else loseReasonEl.textContent = 'Поражение.';
 
         jobLine.textContent = `Работа: ${currentJobName}`;
@@ -961,8 +1088,10 @@
           statsLine.textContent = `Ударов: ${smashed}, темп: ${difficulty.toFixed(2)}×`;
         } else if(mode==='forge'){
           statsLine.textContent = `Успешных руд: ${smashed}, темп: ${difficulty.toFixed(2)}×`;
-        } else {
+        } else if(mode==='herbs'){
           statsLine.textContent = `Трав: ${spawned}, срезано: ${smashed} (${acc}%).`;
+        } else { // herbs_fire
+          statsLine.textContent = `Ягод поймано: ${smashed}, раундов: ${fireRoundNumber}`;
         }
 
         hideAllPanels();
@@ -1332,6 +1461,7 @@
             fctx.lineWidth=2;
             const col = (p.kind==='wood') ? `rgba(255,214,120,${0.30*a})`
                       : (p.kind==='forge') ? `rgba(255,195,140,${0.30*a})`
+                      : (p.kind==='fire') ? `rgba(255,145,70,${0.32*a})`
                       : (p.kind==='herb') ? `rgba(120,210,255,${0.30*a})`
                       : `rgba(207,239,255,${0.35*a})`;
             fctx.strokeStyle = col;
@@ -1346,6 +1476,7 @@
             fctx.arc(p.x,p.y,p.r,0,Math.PI*2);
             const col = (p.kind==='wood') ? `rgba(255,214,120,${0.75*a})`
                       : (p.kind==='forge') ? `rgba(255,195,140,${0.75*a})`
+                      : (p.kind==='fire') ? `rgba(255,145,70,${0.78*a})`
                       : (p.kind==='herb') ? `rgba(120,220,255,${0.78*a})`
                       : `rgba(207,239,255,${0.85*a})`;
             fctx.fillStyle = col;
@@ -1368,7 +1499,10 @@
       let qteSeq = [];
       let qteIndex = 0;
       let qteKeyDeadline = 0;
-      let qteHeld = new Set();
+
+      const QTE_MISTAKES_ALLOWED = 1;
+      let qteMistakes = 0;
+      let qteRepeatPressed = 0; // для "D D"
 
       let shakePower = 0;
       let shakeUntil = 0;
@@ -1440,8 +1574,10 @@
         qteSeq = [];
         qteIndex = 0;
         qteKeyDeadline = 0;
-        qteHeld.clear();
         countdownStart = 0;
+
+        qteMistakes = 0;
+        qteRepeatPressed = 0;
 
         fan.dragging=false;
         fan.omega=0;
@@ -1468,17 +1604,16 @@
       function forgeStartQTE(now){
         forgePhase = 'qte';
         qteIndex = 0;
-        qteHeld.clear();
+        qteMistakes = 0;
+        qteRepeatPressed = 0;
 
         const len = Math.min(11, 5 + Math.floor((difficulty-1)*0.9));
         const twoChance = clamp01((difficulty-1)/6) * 0.45 + 0.12;
 
         qteSeq = Array.from({length:len}, ()=>{
           if(Math.random() < twoChance){
-            const a = FORGE_KEYS[(Math.random()*4)|0];
-            let b = FORGE_KEYS[(Math.random()*4)|0];
-            while(b===a) b = FORGE_KEYS[(Math.random()*4)|0];
-            return [a,b].sort().join('');
+            const k = FORGE_KEYS[(Math.random()*4)|0];
+            return k + k;
           }
           return FORGE_KEYS[(Math.random()*4)|0];
         });
@@ -1538,7 +1673,6 @@
 
         forgeLayout();
 
-        // Наковальня — прямоугольник
         const anW = Math.min(520, Math.max(340, W*0.62));
         const anH = Math.min(150, Math.max(110, H*0.18));
         const anX = W*0.52 - anW*0.5;
@@ -1559,7 +1693,6 @@
         fctx.fill();
         fctx.restore();
 
-        // меч
         const bladeW = Math.min(560, Math.max(360, W*0.62));
         const bladeH = Math.min(88, Math.max(62, H*0.085));
         const bladeX = anX + anW*0.10;
@@ -1713,7 +1846,7 @@
           const remain = Math.max(0, qteKeyDeadline - now);
           const k = clamp01(remain / per);
 
-          fctx.fillText('QTE: нажимай правильно и быстро! (иногда две кнопки)', 18, 78);
+          fctx.fillText('QTE: нажимай правильно и быстро! (иногда D D)', 18, 78);
 
           const bx = W*0.18, by = H*0.16;
           fctx.save();
@@ -1732,18 +1865,12 @@
           fctx.fillStyle='rgba(234,247,255,0.95)';
           fctx.textAlign='center';
           fctx.textBaseline='middle';
-          const shown = cur.toUpperCase().split('').join('+');
-          fctx.fillText(shown, bx+80, by+45);
 
-          if(cur.length===2){
-            fctx.font='800 12px system-ui';
-            fctx.fillStyle='rgba(234,247,255,0.80)';
-            fctx.textAlign='center';
-            const a = cur[0].toUpperCase(), b = cur[1].toUpperCase();
-            const aa = qteHeld.has(cur[0]) ? '✅' : '⬜';
-            const bb = qteHeld.has(cur[1]) ? '✅' : '⬜';
-            fctx.fillText(`${aa} ${a}    ${bb} ${b}`, bx+80, by+78);
-          }
+          const shown = (cur.length===2)
+            ? `${cur[0].toUpperCase()} ${cur[1].toUpperCase()}`
+            : cur.toUpperCase();
+
+          fctx.fillText(shown, bx+80, by+45);
 
           roundRectPath(fctx, bx, by+102, 160, 10, 8);
           fctx.fillStyle='rgba(255,255,255,0.08)';
@@ -1856,13 +1983,13 @@
         }
       }
 
-      // ---------- Herbs (NEW) ----------
+      // ---------- Herbs Mode 1 (Frost) ----------
       let herbs = [];
       let herbSpawnTimer = 0;
       let herbNextSpawn = 800;
 
-      const HERB_HOLD_LIMIT_MS = 850;       // если держать зажатой кнопку дольше — проигрыш
-      const HERB_SNOW_FADE_MS = 3000;       // за 3 секунды побелеет до 100%
+      const HERB_HOLD_LIMIT_MS = 850;
+      const HERB_SNOW_FADE_MS = 3000;
       let herbPointerDown = false;
       let herbDownAt = 0;
       let stroke = [];
@@ -1915,7 +2042,6 @@
         const topX = baseX + Math.sin(hb.tilt)*hb.h;
         const topY = baseY - Math.cos(hb.tilt)*hb.h;
 
-        // glow
         fctx.save();
         fctx.shadowColor = urgent ? 'rgba(255,107,107,0.25)' : 'rgba(159,216,255,0.22)';
         fctx.shadowBlur = 18;
@@ -1933,7 +2059,6 @@
         fctx.quadraticCurveTo((baseX+topX)/2 + Math.sin(age*0.01)*6, (baseY+topY)/2, topX, topY);
         fctx.stroke();
 
-        // шипы растут по времени
         const grown = clamp01(age / (hb.life*0.55));
         const count = hb.spikes;
         for(let i=0;i<count;i++){
@@ -1959,7 +2084,6 @@
           fctx.fill();
         }
 
-        // маленький таймер-дуга
         const r = 20;
         const cx = topX, cy = topY;
         const start = -Math.PI/2;
@@ -1970,7 +2094,6 @@
         fctx.stroke();
 
         fctx.restore();
-
         return { k, baseX, baseY, topX, topY };
       }
 
@@ -2047,6 +2170,278 @@
         }
       }
 
+      // ---------- Herbs Mode 2 (Fire bush + berries + basket) ----------
+      let fireBush = { x:0, y:0, w:0, h:0 };
+      let fireBerries = []; // {x,y,r, state:'rest'|'fall', vy}
+      let basket = { x:0, y:0, w:0, h:0 };
+      let fireRoundLimit = 0;
+      let fireRoundStart = 0;
+      let fireBerryCount = 3;
+      let fireCaughtThisRound = 0;
+      let fireRoundNumber = 0;
+
+      function fireLayout(){
+        fireBush.x = W*0.5;
+        fireBush.y = H*0.68;
+        fireBush.w = Math.min(360, Math.max(260, W*0.56));
+        fireBush.h = Math.min(220, Math.max(160, H*0.24));
+        basket.w = Math.min(220, Math.max(160, W*0.28));
+        basket.h = Math.min(64, Math.max(48, H*0.07));
+        basket.y = H - basket.h - 26;
+        if(!basket.x) basket.x = W*0.5;
+      }
+
+      function fireBurst(x,y,rad){
+        const n = 16 + ((rad*0.4)|0);
+        for(let i=0;i<n;i++){
+          const a=rand(0,Math.PI*2), sp=rand(0.8,4.6);
+          particles.push({x,y,vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - rand(0.2,1.4), r:rand(1.0,3.0), life:rand(260,680), born:performance.now(), kind:'fire'});
+        }
+        particles.push({ring:true,x,y,r:Math.max(10,rad*0.55), life:220, born:performance.now(), kind:'fire'});
+      }
+
+      function fireStartRound(now){
+        fireLayout();
+        fireRoundNumber++;
+        fireCaughtThisRound = 0;
+        fireBerries.length = 0;
+
+        const count = fireBerryCount;
+        const arcW = fireBush.w*0.42;
+        for(let i=0;i<count;i++){
+          const px = fireBush.x + rand(-arcW, arcW);
+          const py = (fireBush.y - fireBush.h*0.30) + rand(-fireBush.h*0.18, fireBush.h*0.14);
+          fireBerries.push({
+            x:px, y:py,
+            r: Math.min(16, Math.max(12, W*0.016)),
+            state:'rest',
+            vy: 0
+          });
+        }
+
+        fireRoundStart = now;
+        fireRoundLimit = Math.max(1400, 3400/(0.90 + difficulty*0.45));
+      }
+
+      function drawFireScene(now){
+        fireLayout();
+
+        const glow = fctx.createRadialGradient(fireBush.x, fireBush.y, 10, fireBush.x, fireBush.y, Math.max(W,H)*0.6);
+        glow.addColorStop(0,'rgba(255,120,60,0.18)');
+        glow.addColorStop(1,'rgba(0,0,0,0)');
+        fctx.fillStyle=glow; fctx.fillRect(0,0,W,H);
+
+        const ground = fctx.createLinearGradient(0, H*0.62, 0, H);
+        ground.addColorStop(0,'rgba(0,0,0,0.00)');
+        ground.addColorStop(0.65,'rgba(10,6,4,0.18)');
+        ground.addColorStop(1,'rgba(10,6,4,0.32)');
+        fctx.fillStyle=ground; fctx.fillRect(0,0,W,H);
+
+        const bx = fireBush.x, by = fireBush.y;
+        const bw = fireBush.w, bh = fireBush.h;
+
+        fctx.save();
+        fctx.shadowColor='rgba(0,0,0,0.50)';
+        fctx.shadowBlur=22;
+        fctx.shadowOffsetY=12;
+
+        const bushGrad = fctx.createRadialGradient(bx-bw*0.15, by-bh*0.22, 10, bx, by, bw*0.65);
+        bushGrad.addColorStop(0,'rgba(255,214,120,0.22)');
+        bushGrad.addColorStop(0.35,'rgba(255,145,70,0.22)');
+        bushGrad.addColorStop(1,'rgba(30,20,16,0.90)');
+        fctx.fillStyle=bushGrad;
+
+        fctx.beginPath();
+        const pts=14;
+        for(let i=0;i<=pts;i++){
+          const t = i/pts;
+          const a = Math.PI + t*Math.PI;
+          const wob = 0.16*Math.sin(t*8 + now*0.0013) + 0.08*Math.cos(t*6 - now*0.0011);
+          const rx = (bw*0.48)*(1+wob);
+          const ry = (bh*0.32)*(1+wob*0.5);
+          const x = bx + Math.cos(a)*rx;
+          const y = by + Math.sin(a)*ry;
+          if(i===0) fctx.moveTo(x,y);
+          else fctx.lineTo(x,y);
+        }
+        const topY = by - bh*0.42;
+        for(let i=0;i<10;i++){
+          const tx = bx + rand(-bw*0.36, bw*0.36);
+          const h = rand(bh*0.10, bh*0.26);
+          fctx.quadraticCurveTo(tx, topY - h, tx + rand(-18,18), topY + rand(-8,10));
+        }
+        fctx.closePath();
+        fctx.fill();
+
+        for(let i=0;i<8;i++){
+          const gx = bx + rand(-bw*0.25,bw*0.25);
+          const gy = by - rand(bh*0.10,bh*0.34);
+          const rr = rand(20, 55);
+          const g2 = fctx.createRadialGradient(gx,gy,10,gx,gy,rr);
+          g2.addColorStop(0,'rgba(255,214,120,0.20)');
+          g2.addColorStop(1,'rgba(0,0,0,0)');
+          fctx.fillStyle=g2;
+          fctx.beginPath(); fctx.arc(gx,gy,rr,0,Math.PI*2); fctx.fill();
+        }
+
+        fctx.restore();
+
+        for(const b of fireBerries){
+          const pulse = 1 + Math.sin((now*0.008) + b.x*0.01)*0.06;
+          fctx.save();
+          fctx.shadowColor='rgba(255,120,60,0.40)';
+          fctx.shadowBlur=16;
+          const g = fctx.createRadialGradient(b.x-b.r*0.25, b.y-b.r*0.25, 2, b.x, b.y, b.r*1.3);
+          g.addColorStop(0,'rgba(255,214,120,0.90)');
+          g.addColorStop(0.45,'rgba(255,90,50,0.85)');
+          g.addColorStop(1,'rgba(120,18,12,0.75)');
+          fctx.fillStyle=g;
+          fctx.beginPath();
+          fctx.arc(b.x,b.y,b.r*pulse,0,Math.PI*2);
+          fctx.fill();
+
+          fctx.fillStyle='rgba(255,255,255,0.10)';
+          fctx.beginPath();
+          fctx.arc(b.x-b.r*0.25, b.y-b.r*0.25, b.r*0.28, 0, Math.PI*2);
+          fctx.fill();
+          fctx.restore();
+        }
+
+        basket.x = Math.max(basket.w*0.5+10, Math.min(W-basket.w*0.5-10, basket.x));
+        const x = basket.x - basket.w*0.5;
+        const y = basket.y;
+        fctx.save();
+        fctx.shadowColor='rgba(0,0,0,0.50)';
+        fctx.shadowBlur=18;
+        fctx.shadowOffsetY=10;
+
+        const wood = fctx.createLinearGradient(x,y,x+basket.w,y+basket.h);
+        wood.addColorStop(0,'rgba(160,112,70,0.70)');
+        wood.addColorStop(1,'rgba(70,45,30,0.85)');
+        fctx.fillStyle=wood;
+        roundRectPath(fctx, x, y, basket.w, basket.h, 18);
+        fctx.fill();
+
+        fctx.strokeStyle='rgba(255,214,120,0.16)';
+        fctx.lineWidth=2;
+        roundRectPath(fctx, x+10, y+10, basket.w-20, basket.h-20, 14);
+        fctx.stroke();
+        fctx.restore();
+
+        const timeLeft = Math.max(0, fireRoundLimit - (now - fireRoundStart));
+        const pTime = clamp01(timeLeft / fireRoundLimit);
+        const pGoal = clamp01(fireCaughtThisRound / Math.max(1, fireBerryCount));
+
+        fctx.save();
+        fctx.font='700 14px system-ui';
+        fctx.fillStyle='rgba(234,247,255,0.92)';
+        fctx.textAlign='left';
+        fctx.textBaseline='top';
+        fctx.fillText(`Огненный куст: поймай ${fireCaughtThisRound}/${fireBerryCount} ягод`, 18, 78);
+        fctx.fillText(`Время: ${(timeLeft/1000).toFixed(1)}с`, 18, 98);
+
+        const bx2=18, by2=124, bw2=260, bh2=10;
+        roundRectPath(fctx, bx2, by2, bw2, bh2, 8);
+        fctx.fillStyle='rgba(255,255,255,0.08)';
+        fctx.fill();
+        roundRectPath(fctx, bx2, by2, bw2*pTime, bh2, 8);
+        fctx.fillStyle = (pTime<0.25) ? 'rgba(255,107,107,0.75)' : 'rgba(255,195,140,0.70)';
+        fctx.fill();
+
+        const bx3=18, by3=142;
+        roundRectPath(fctx, bx3, by3, bw2, bh2, 8);
+        fctx.fillStyle='rgba(255,255,255,0.08)';
+        fctx.fill();
+        roundRectPath(fctx, bx3, by3, bw2*pGoal, bh2, 8);
+        fctx.fillStyle='rgba(101,255,178,0.55)';
+        fctx.fill();
+
+        fctx.restore();
+      }
+
+      function fireUpdate(now, dt){
+        // ✅ NEW: ягода может сама начать падать случайно
+        for(const b of fireBerries){
+          if(b.state === 'rest'){
+            const chance = 0.0006 + difficulty * 0.00025;
+            if(Math.random() < chance * (dt/16.7)){
+              b.state = 'fall';
+              b.vy = (1.6 + difficulty*0.22) * (0.9 + Math.random()*0.3);
+              spawned++;
+              fireBurst(b.x,b.y,10);
+              if(audioCtx && audioCtx.state==='running') playFirePop(0.7);
+            }
+          }
+        }
+
+        // time limit
+        if(now - fireRoundStart > fireRoundLimit){
+          lose('fire_timeout');
+          return;
+        }
+
+        const basketLeft = basket.x - basket.w*0.5;
+        const basketRight = basket.x + basket.w*0.5;
+        const catchY = basket.y + basket.h*0.30;
+
+        for(let i=fireBerries.length-1;i>=0;i--){
+          const b = fireBerries[i];
+          if(b.state !== 'fall') continue;
+
+          b.vy += (0.55 + 0.08*difficulty) * (dt/16.7);
+          b.y += b.vy * (dt/16.7);
+
+          if(b.y >= catchY && b.y <= basket.y + basket.h){
+            if(b.x >= basketLeft && b.x <= basketRight){
+              fireCaughtThisRound++;
+              smashed++;
+              score++;
+              scoreEl.textContent = score;
+              computeDifficulty();
+              missesStreak=0;
+              updateMissesUI();
+
+              // ✅ NEW: +0.25с за каждую пойманную ягодку
+              fireRoundLimit += 250;
+
+              fireBurst(b.x,b.y,18);
+              if(audioCtx && audioCtx.state==='running') playFirePop(Math.min(1.6, 1 + difficulty*0.10));
+              fireBerries.splice(i,1);
+
+              if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
+
+              if(fireCaughtThisRound >= fireBerryCount){
+                fireBerryCount++;
+                fireStartRound(now+10);
+              }
+              continue;
+            }
+          }
+
+          if(b.y > H + 40){
+            lose('fire_missed');
+            return;
+          }
+        }
+      }
+
+      function fireHitBerry(px,py, now){
+        for(let i=fireBerries.length-1;i>=0;i--){
+          const b = fireBerries[i];
+          if(b.state !== 'rest') continue;
+          const dx = px - b.x, dy = py - b.y;
+          if(dx*dx + dy*dy <= (b.r*b.r)){
+            b.state = 'fall';
+            b.vy = (2.2 + difficulty*0.25) * (0.9 + Math.random()*0.2);
+            spawned++;
+            fireBurst(b.x,b.y,12);
+            if(audioCtx && audioCtx.state==='running') playFirePop(0.85);
+            return true;
+          }
+        }
+        return false;
+      }
+
       // ---------- Input ----------
       function getPointerPos(e){
         const rect = fx.getBoundingClientRect();
@@ -2077,13 +2472,16 @@
           stroke.length = 0;
           stroke.push({x,y,t:herbDownAt});
           fx.setPointerCapture(e.pointerId);
-          // сразу пробуем резануть при касании
           tryCutHerbWithPoint(x,y, herbDownAt);
           return;
         }
 
+        if(mode==='herbs_fire'){
+          fireHitBerry(x,y, performance.now());
+          return;
+        }
+
         if(mode==='forge'){
-          // (forge handlers ниже оставлены как в прошлой версии)
           if(forgePhase==='drag'){
             if(!ore) return;
             if(dist2(x,y,ore.x,ore.y) <= ore.r*ore.r){
@@ -2122,6 +2520,11 @@
           stroke.push({x,y,t:now});
           if(stroke.length > 24) stroke.shift();
           tryCutHerbWithPoint(x,y, now);
+          return;
+        }
+
+        if(mode==='herbs_fire'){
+          basket.x = x;
           return;
         }
 
@@ -2212,14 +2615,38 @@
         if(!qteSeq.length) return;
 
         const per = Math.max(420, 900/(0.85 + difficulty*0.55));
-        if(now > qteKeyDeadline){ lose('forge_timeout'); return; }
+
+        if(now > qteKeyDeadline){
+          if(qteMistakes < QTE_MISTAKES_ALLOWED){
+            qteMistakes++;
+            qteKeyDeadline = now + per;
+            shakePower = 0.4;
+            shakeUntil = now + 90;
+            return;
+          }
+          lose('forge_timeout');
+          return;
+        }
 
         const cur = qteSeq[qteIndex];
         if(!cur) return;
 
-        if(cur.length===1){
-          if(key !== cur){ lose('forge_wrong_key'); return; }
+        if(cur.length === 1){
+          if(key !== cur){
+            if(qteMistakes < QTE_MISTAKES_ALLOWED){
+              qteMistakes++;
+              qteKeyDeadline = now + per;
+              shakePower = 0.5;
+              shakeUntil = now + 100;
+              return;
+            }
+            lose('forge_wrong_key');
+            return;
+          }
+
+          qteRepeatPressed = 0;
           qteIndex++;
+
           if (audioCtx && audioCtx.state === 'running') playAnvilHit(0.80);
           shakePower = 0.8 + clamp01((difficulty-1)/6)*1.8;
           shakeUntil = now + 120;
@@ -2229,19 +2656,34 @@
           return;
         }
 
-        const a = cur[0], b = cur[1];
-        if(key !== a && key !== b){ lose('forge_wrong_key'); return; }
-        qteHeld.add(key);
+        const kcur = cur[0];
+
+        if(key !== kcur){
+          if(qteMistakes < QTE_MISTAKES_ALLOWED){
+            qteMistakes++;
+            qteKeyDeadline = now + per;
+            shakePower = 0.5;
+            shakeUntil = now + 110;
+            return;
+          }
+          lose('forge_wrong_key');
+          return;
+        }
+
+        qteRepeatPressed++;
 
         if (audioCtx && audioCtx.state === 'running') playAnvilHit(0.65);
         shakePower = 0.9 + clamp01((difficulty-1)/6)*2.1;
         shakeUntil = now + 140;
 
-        if(qteHeld.has(a) && qteHeld.has(b)){
-          qteHeld.clear();
+        if(qteRepeatPressed >= 2){
+          qteRepeatPressed = 0;
           qteIndex++;
+
           if(qteIndex >= qteSeq.length){ forgeStartFan(now); return; }
           qteKeyDeadline = now + per;
+        } else {
+          qteKeyDeadline = now + per * 0.85;
         }
       }
 
@@ -2284,7 +2726,15 @@
             if(forgePhase==='countdown'){
               if(now - countdownStart >= COUNTDOWN_MS) forgeStartQTE(now);
             } else if(forgePhase==='qte'){
-              if(now > qteKeyDeadline) lose('forge_timeout');
+              if(now > qteKeyDeadline){
+                if(qteMistakes < QTE_MISTAKES_ALLOWED){
+                  qteMistakes++;
+                  const per = Math.max(420, 900/(0.85 + difficulty*0.55));
+                  qteKeyDeadline = now + per;
+                } else {
+                  lose('forge_timeout');
+                }
+              }
             } else if(forgePhase==='fan'){
               const elapsedTotal = now - fan.spawnedAt;
               if(elapsedTotal > fan.totalLimit){
@@ -2298,7 +2748,6 @@
             }
             drawForgeScene(now);
           } else if(mode==='herbs'){
-            // hold-too-long = проигрыш
             if(herbPointerDown){
               if(now - herbDownAt > HERB_HOLD_LIMIT_MS){
                 lose('herb_hold');
@@ -2312,12 +2761,10 @@
               herbScheduleNext();
             }
 
-            // рисуем травы + проверяем таймаут
             for(let i=herbs.length-1;i>=0;i--){
               const hb = herbs[i];
               const info = drawHerb(hb, now);
               if(info.k >= 1){
-                // не срезал — поражение
                 lose('herb_missed');
                 break;
               }
@@ -2325,9 +2772,11 @@
 
             drawStroke();
             updateSnowOverlay(now);
+          } else if(mode==='herbs_fire'){
+            fireUpdate(now, dt);
+            if(!lost) drawFireScene(now);
           }
         } else {
-          // когда не играем — рисуем "пассивные" сцены
           if(mode==='forest') drawForestScene(now);
           if(mode==='forge') drawForgeScene(now);
           if(mode==='mines') for(const r of rocks) drawRock(r, now);
@@ -2336,6 +2785,7 @@
             drawStroke();
             updateSnowOverlay(now);
           }
+          if(mode==='herbs_fire') drawFireScene(now);
         }
 
         updateAndDrawParticles(now, dt);
@@ -2373,7 +2823,7 @@
         mode='forge';
         currentJobName='Кузница';
         currentLocationName='Ковать базовое оружие';
-        footerHint.textContent='Кузница: руда → W/A/S/D (иногда 2) → вентилятор 15 оборотов за 3с 🔥';
+        footerHint.textContent='Кузница: руда → W/A/S/D (иногда D D) → вентилятор 15 оборотов за 3с 🔥';
 
         resetCommon();
         forgePhase='idle';
@@ -2383,10 +2833,10 @@
         if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
       }
 
-      function startHerbs(){
+      function startHerbsFrost(){
         mode='herbs';
         currentJobName='Сбор трав';
-        currentLocationName='Морозные поля';
+        currentLocationName='Морозная трава';
         footerHint.textContent='Сбор трав: режь с зажатой кнопкой, но не держи слишком долго. Жми ПРОБЕЛ от снега!';
 
         resetCommon();
@@ -2402,16 +2852,33 @@
         if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
       }
 
+      function startHerbsFire(){
+        mode='herbs_fire';
+        currentJobName='Сбор трав';
+        currentLocationName='Огненный куст';
+        footerHint.textContent='Огненный куст: кликай ягоды → лови корзиной (мышкой/пальцем или A/D). Время ограничено!';
+
+        resetCommon();
+        fireBerryCount = 3;
+        fireRoundNumber = 0;
+        fireCaughtThisRound = 0;
+        basket.x = W*0.5;
+        fireStartRound(performance.now());
+
+        if (musicOn && audioCtx && audioCtx.state === 'running') startMusic();
+      }
+
       // ---------- UI wiring ----------
       goMines.addEventListener('click', showMinesMenu);
       goForest.addEventListener('click', showForestMenu);
       goForge.addEventListener('click', showForgePass);
-      goHerbs.addEventListener('click', startHerbs);
+      goHerbs.addEventListener('click', showHerbsMenu);
 
       backToMainFromMines.addEventListener('click', showMainMenu);
       backToMainFromForest.addEventListener('click', showMainMenu);
       backToMainFromForgePass.addEventListener('click', showMainMenu);
       backToMainFromForgeMenu.addEventListener('click', showMainMenu);
+      backToMainFromHerbsMenu.addEventListener('click', showMainMenu);
 
       howBtn.addEventListener('click', ()=>{
         hideAllPanels();
@@ -2421,7 +2888,10 @@
       backBtn.addEventListener('click', showMainMenu);
 
       mine1.addEventListener('click', ()=> startMine(1));
-      mine2.addEventListener('click', ()=> showToast(toastMines,'Этот уровень пока недоступен ❄️'));
+      mine2.addEventListener('click', ()=> {
+       window.location.href = 'deep_mines_northland.html';
+      });
+
       mine3.addEventListener('click', ()=> showToast(toastMines,'Этот уровень пока недоступен ❄️'));
       mine4.addEventListener('click', ()=> showToast(toastMines,'Этот уровень пока недоступен ❄️'));
       mine5.addEventListener('click', ()=> showToast(toastMines,'Этот уровень пока недоступен ❄️'));
@@ -2439,10 +2909,14 @@
 
       forgeBasic.addEventListener('click', startForgeBasic);
 
+      herbMode1Btn.addEventListener('click', startHerbsFrost);
+      herbMode2Btn.addEventListener('click', startHerbsFire);
+
       againBtn.addEventListener('click', ()=>{
         if(mode==='forest') startForest(1);
         else if(mode==='forge') startForgeBasic();
-        else if(mode==='herbs') startHerbs();
+        else if(mode==='herbs') startHerbsFrost();
+        else if(mode==='herbs_fire') startHerbsFire();
         else startMine(1);
       });
       toMenuBtn.addEventListener('click', showMainMenu);
@@ -2451,14 +2925,16 @@
       restartBtn.addEventListener('click', ()=>{
         if(mode==='forest') startForest(1);
         else if(mode==='forge') startForgeBasic();
-        else if(mode==='herbs') startHerbs();
+        else if(mode==='herbs') startHerbsFrost();
+        else if(mode==='herbs_fire') startHerbsFire();
         else startMine(1);
       });
       resumeBtn.addEventListener('click', ()=> togglePause(false));
       pauseRestartBtn.addEventListener('click', ()=>{
         if(mode==='forest') startForest(1);
         else if(mode==='forge') startForgeBasic();
-        else if(mode==='herbs') startHerbs();
+        else if(mode==='herbs') startHerbsFrost();
+        else if(mode==='herbs_fire') startHerbsFire();
         else startMine(1);
       });
 
@@ -2471,11 +2947,11 @@
         if(k==='r'){
           if(mode==='forest') startForest(1);
           else if(mode==='forge') startForgeBasic();
-          else if(mode==='herbs') startHerbs();
+          else if(mode==='herbs') startHerbsFrost();
+          else if(mode==='herbs_fire') startHerbsFire();
           else startMine(1);
         }
 
-        // space for herbs snow shake
         if(k===' ' || k==='spacebar'){
           if(mode==='herbs' && running && !paused && !lost){
             lastSpaceAt = now;
@@ -2483,6 +2959,11 @@
             if(audioCtx && audioCtx.state==='running') playHerbSlice(0.45);
           }
           e.preventDefault();
+        }
+
+        if(mode==='herbs_fire' && running && !paused && !lost){
+          if(k==='a') basket.x -= 28;
+          if(k==='d') basket.x += 28;
         }
 
         handleForestKey(k, now);
@@ -2512,3 +2993,4 @@
   </script>
 </body>
 </html>
+
