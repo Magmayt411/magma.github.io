@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ACT 4 — Пение</title>
+  <style>
+    :root{
+      --bg1:#061220;
+      --bg2:#0a2a3d;
+      --ice:#cfefff;
+      --ice2:#9fd8ff;
+      --danger:#ff6b6b;
+      --ok:#65ffb2;
+      --shadow: rgba(0,0,0,.35);
+    }
+    *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color: transparent; }
+    html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#eaf7ff; }
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 30% 20%, rgba(159,216,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 80% 10%, rgba(207,239,255,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+    .frost{ position:fixed; inset:-40px; background:
+      radial-gradient(800px 400px at 20% 10%, rgba(207,239,255,.10), transparent 60%),
+      radial-gradient(700px 380px at 70% 0%, rgba(207,239,255,.08), transparent 60%),
+      radial-gradient(900px 500px at 50% 100%, rgba(159,216,255,.08), transparent 65%);
+      pointer-events:none;
+    }
+    #game{ position:fixed; inset:0; }
+    canvas{ position:absolute; inset:0; width:100%; height:100%; }
+
+    .hud{
+      position:fixed; top:16px; left:16px; right:16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .pill{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      padding:10px 14px; border-radius:999px;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px var(--shadow);
+      border: 1px solid rgba(207,239,255,.18);
+    }
+    .score{ font-weight:800; letter-spacing:.2px; display:flex; align-items:baseline; gap:8px; }
+    .score span{ color: var(--ice2); font-size: 22px; }
+    .tiny{ opacity:.9; font-size:12px; letter-spacing:.2px; }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(207,239,255,.22);
+      color:#eaf7ff;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow: 0 10px 25px var(--shadow);
+      font-weight:700;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease, opacity .12s ease;
+      white-space:nowrap;
+    }
+    button:hover{ border-color: rgba(207,239,255,.35); transform: translateY(-1px); }
+    button:active{ transform: translateY(0px); }
+    .primary{ border-color: rgba(101,255,178,.35) !important; background: rgba(101,255,178,.12) !important; }
+    .danger{ border-color: rgba(255,107,107,.35) !important; background: rgba(255,107,107,.10) !important; }
+
+    .centerOverlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+    .panel{
+      width:min(620px, calc(100% - 32px));
+      border-radius:22px;
+      background: rgba(6,18,32,.55);
+      border: 1px solid rgba(207,239,255,.20);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(14px);
+      padding:18px 18px 14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+    h1{ margin:0; font-size:22px; letter-spacing:.3px; }
+    .badge{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(207,239,255,.22);
+      background: rgba(207,239,255,.08);
+      color: rgba(234,247,255,.95);
+      white-space:nowrap;
+    }
+    .panel p{ margin:10px 0; line-height:1.45; opacity:.95; }
+    .panel .big{ font-size:18px; font-weight:900; margin-top:4px; margin-bottom:10px; }
+    .panel .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .bar{
+      height:10px; width:100%;
+      border-radius:999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(207,239,255,.14);
+      overflow:hidden;
+      box-shadow: 0 10px 25px var(--shadow);
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(101,255,178,.65), rgba(159,216,255,.65));
+    }
+    .hint{
+      position:fixed; bottom:12px; left:0; right:0;
+      text-align:center; font-size:12px; opacity:.72; pointer-events:none;
+    }
+    .warn{ color: rgba(255,214,120,.95); }
+    .err{ color: rgba(255,107,107,.95); }
+  </style>
+</head>
+<body>
+  <div class="frost"></div>
+
+  <div id="game">
+    <canvas id="bg"></canvas>
+    <canvas id="fx"></canvas>
+  </div>
+
+  <div class="hud">
+    <div class="pill">
+      <div class="score">Счёт: <span id="score">0</span></div>
+      <div class="tiny" id="spd">Скорость: 1.00×</div>
+      <div class="tiny" id="micState">Микрофон: —</div>
+      <div class="tiny" id="calState">Калибровка: —</div>
+    </div>
+    <div class="btnRow">
+      <button id="micBtn" class="primary">🎤 Включить микрофон</button>
+      <button id="pauseBtn">Пауза</button>
+      <button id="restartBtn">Рестарт</button>
+      <button id="backBtn" class="danger">В меню</button>
+    </div>
+  </div>
+
+  <div class="centerOverlay" id="overlay">
+    <div class="panel" id="panel">
+      <div class="title">
+        <h1>Пение — полёт</h1>
+        <div class="badge">другое</div>
+      </div>
+      <p class="big">Пой/гуди в микрофон — шарик поднимается и пролетает ворота.</p>
+      <p class="tiny">Громче = выше. Тише = ниже. Скорость постепенно растёт.</p>
+      <p class="tiny warn">Важно: браузер попросит доступ к микрофону. Лучше Chrome/Edge.</p>
+
+      <div class="tiny" style="margin-top:12px;">Громкость (текущая)</div>
+      <div class="bar"><div id="volBar"></div></div>
+
+      <p class="tiny" style="margin-top:12px;">
+        <b>Управление:</b> 🎤 включить микрофон • <b>P</b> пауза • <b>R</b> рестарт • <b>Esc</b> меню
+      </p>
+
+      <div class="actions">
+        <button id="startBtn" class="primary">Старт</button>
+        <button id="helpBtn">Как играть</button>
+      </div>
+
+      <div class="panel" id="help" style="margin-top:12px; display:none;">
+        <div class="title">
+          <h1>Как играть</h1>
+          <div class="badge">подсказка</div>
+        </div>
+        <p>1) Нажми <b>🎤 Включить микрофон</b>.</p>
+        <p>2) 1 секунду помолчи — игра запомнит “тишину”.</p>
+        <p>3) Пой/гуди “ааа” — шарик поднимется. Отпусти голос — опустится.</p>
+        <p>4) Пролетай через ворота. Каждое ворото = +1 очко. Скорость растёт.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint" id="hint">Включи микрофон и начни петь 🎶</div>
+
+  <script>
+  (() => {
+    const bg = document.getElementById('bg');
+    const fx = document.getElementById('fx');
+    const bctx = bg.getContext('2d');
+    const fctx = fx.getContext('2d');
+
+    const overlay = document.getElementById('overlay');
+    const panel = document.getElementById('panel');
+    const help = document.getElementById('help');
+
+    const scoreEl = document.getElementById('score');
+    const spdEl = document.getElementById('spd');
+    const micStateEl = document.getElementById('micState');
+    const calStateEl = document.getElementById('calState');
+    const hintEl = document.getElementById('hint');
+
+    const micBtn = document.getElementById('micBtn');
+    const startBtn = document.getElementById('startBtn');
+    const helpBtn = document.getElementById('helpBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const backBtn = document.getElementById('backBtn');
+    const volBar = document.getElementById('volBar');
+
+    const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    let W=0, H=0, dpr=DPR();
+
+    const rand = (a,b)=> Math.random()*(b-a)+a;
+    const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+    const clamp01 = (v)=> clamp(v,0,1);
+
+    function resize(){
+      dpr = DPR();
+      W = Math.floor(innerWidth);
+      H = Math.floor(innerHeight);
+      for(const c of [bg,fx]){
+        c.width = Math.floor(W*dpr);
+        c.height = Math.floor(H*dpr);
+        c.style.width = W+'px';
+        c.style.height = H+'px';
+      }
+      bctx.setTransform(dpr,0,0,dpr,0,0);
+      fctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    addEventListener('resize', resize, {passive:true});
+    resize();
+
+    // --- Background particles (snow-ish) ---
+    const flakes=[];
+    const F=120;
+    function initFlakes(){
+      flakes.length=0;
+      for(let i=0;i<F;i++){
+        flakes.push({x:rand(0,W), y:rand(0,H), r:rand(0.8,2.4), vx:rand(-0.25,0.25), vy:rand(0.6,1.6), a:rand(0.25,0.85), wob:rand(0,Math.PI*2), ws:rand(0.006,0.018)});
+      }
+    }
+    initFlakes();
+
+    function drawBG(){
+      bctx.clearRect(0,0,W,H);
+      const g = bctx.createRadialGradient(W*0.35, H*0.18, 10, W*0.35, H*0.18, Math.max(W,H)*0.9);
+      g.addColorStop(0,'rgba(159,216,255,0.18)');
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      bctx.fillStyle=g;
+      bctx.fillRect(0,0,W,H);
+
+      for(const f of flakes){
+        f.wob += f.ws;
+        f.x += f.vx + Math.sin(f.wob)*0.25;
+        f.y += f.vy;
+        if (f.y > H + 10) { f.y = -10; f.x = rand(0, W); }
+        if (f.x < -10) f.x = W + 10;
+        if (f.x > W + 10) f.x = -10;
+        bctx.beginPath();
+        bctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+        bctx.fillStyle = `rgba(207,239,255,${f.a})`;
+        bctx.fill();
+      }
+    }
+
+    // ===== Mic (WebAudio) =====
+    let audioCtx=null, analyser=null, micStream=null, micSrc=null;
+    let micEnabled=false;
+
+    // calibration
+    let noiseFloor=0.02;     // baseline RMS
+    let calUntil=0;
+    let calibrated=false;
+
+    // smoothed loudness
+    let loud=0;    // 0..1
+    let loudRaw=0;
+
+    async function enableMic(){
+      try{
+        micStateEl.textContent = 'Микрофон: запрашиваю...';
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
+        micStream = stream;
+
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+        micSrc = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.85;
+        micSrc.connect(analyser);
+
+        micEnabled=true;
+        micStateEl.textContent = 'Микрофон: ON';
+        micBtn.textContent = '🎤 Микрофон: ON';
+        micBtn.classList.add('primary');
+
+        // start calibration: 1 sec silence
+        calibrated=false;
+        calUntil = performance.now() + 1100;
+        calStateEl.textContent = 'Калибровка: молчи 1с...';
+      }catch(err){
+        micEnabled=false;
+        micStateEl.textContent = 'Микрофон: ОШИБКА';
+        calStateEl.textContent = 'Калибровка: —';
+        micBtn.textContent = '🎤 Включить микрофон';
+        micBtn.classList.remove('primary');
+        hintEl.textContent = 'Не удалось включить микрофон (разреши доступ).';
+      }
+    }
+
+    function disableMic(){
+      micEnabled=false;
+      calibrated=false;
+      calStateEl.textContent = 'Калибровка: —';
+      micStateEl.textContent = 'Микрофон: OFF';
+      micBtn.textContent = '🎤 Включить микрофон';
+      micBtn.classList.remove('primary');
+      try{ micStream?.getTracks()?.forEach(t=>t.stop()); }catch{}
+      micStream=null;
+      try{ audioCtx?.close(); }catch{}
+      audioCtx=null; analyser=null; micSrc=null;
+    }
+
+    function readMic(now){
+      if(!micEnabled || !analyser) { loudRaw = 0; loud = loud*0.92; return; }
+      const buf = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(buf);
+
+      // RMS
+      let sum=0;
+      for(let i=0;i<buf.length;i++){
+        const v=buf[i];
+        sum += v*v;
+      }
+      const rms = Math.sqrt(sum/buf.length); // ~0..1
+
+      // calibration: average noise floor
+      if(now < calUntil){
+        // slow approach to rms
+        noiseFloor = noiseFloor*0.92 + rms*0.08;
+        loudRaw = 0;
+        loud = loud*0.90;
+        volBar.style.width = (clamp01(rms*6))*100 + '%';
+        return;
+      } else if(!calibrated){
+        calibrated=true;
+        calStateEl.textContent = `Калибровка: готово (тишина≈${noiseFloor.toFixed(3)})`;
+        hintEl.textContent = 'Пой/гуди — шарик полетит выше 🎶';
+      }
+
+      // subtract floor and normalize
+      const v = Math.max(0, rms - noiseFloor);
+      // map to 0..1 with gentle curve
+      const norm = clamp01(v * 18); // sensitivity
+      loudRaw = norm;
+      loud = loud*0.85 + loudRaw*0.15;
+
+      volBar.style.width = (loud*100).toFixed(0) + '%';
+    }
+
+    // ===== Game =====
+    let running=false, paused=false, lost=false;
+    let score=0;
+
+    // world motion
+    let speed=220;         // px/sec forward speed (grows)
+    let speedMul=1.0;
+    let speedAdd=12;       // growth per gate
+    let accel=8;           // passive accel (px/sec^2)
+
+    // player (ball)
+    const ball = {
+      x: 180,
+      y: 0,
+      r: 16,
+      vy: 0
+    };
+
+    // obstacles: "gates" (two rectangles with gap)
+    let gates=[];
+    let nextGateAt=0;
+
+    function resetGame(){
+      running=false; paused=false; lost=false;
+      score=0; scoreEl.textContent='0';
+
+      speed=220;
+      speedMul=1.0;
+      nextGateAt=0;
+      gates.length=0;
+
+      ball.x = Math.min(220, W*0.28);
+      ball.y = H*0.5;
+      ball.vy = 0;
+
+      spdEl.textContent = 'Скорость: 1.00×';
+      hintEl.textContent = micEnabled ? 'Пой/гуди — держи шарик в воротах!' : 'Включи микрофон и начни петь 🎶';
+    }
+
+    function spawnGate(now){
+      const gapH = clamp(170 - score*2.2, 92, 170);      // gap shrinks a bit
+      const gateW = clamp(86 + score*0.35, 86, 120);    // thicker later
+      const margin = 70;
+
+      const gapY = rand(margin + gapH*0.5, H - margin - gapH*0.5);
+
+      gates.push({
+        x: W + gateW + 20,
+        w: gateW,
+        gapY,
+        gapH,
+        passed:false,
+        pulse: rand(0, Math.PI*2)
+      });
+
+      // next gate interval decreases
+      const base = 1.25; // sec
+      const minI = 0.72;
+      const interval = Math.max(minI, base - score*0.012);
+      nextGateAt = now + interval*1000;
+    }
+
+    function ballControl(dt){
+      // voice -> target Y (0..1)
+      // if mic off => gentle fall
+      const t = micEnabled && calibrated ? loud : 0;
+
+      const targetY = (H*0.12) + (1 - t) * (H*0.76); // loud -> up
+      // spring follow
+      const k = 14.0; // stiffness
+      const damp = 0.88;
+
+      const dy = targetY - ball.y;
+      ball.vy += dy * k * (dt/1000);
+      ball.vy *= Math.pow(damp, dt/16.7);
+
+      ball.y += ball.vy * (dt/1000);
+
+      // bounds (touching = lose)
+      if(ball.y - ball.r < 0 || ball.y + ball.r > H){
+        lose('Слишком высоко/низко — удар о стену.');
+      }
+    }
+
+    function collideGate(g){
+      const bx = ball.x, by = ball.y, br = ball.r;
+      const gx = g.x, gw = g.w;
+
+      // if ball within gate x-range
+      if(bx + br < gx || bx - br > gx + gw) return false;
+
+      const gapTop = g.gapY - g.gapH*0.5;
+      const gapBot = g.gapY + g.gapH*0.5;
+
+      // collision if ball is NOT within gap
+      if(by - br < gapTop || by + br > gapBot){
+        return true;
+      }
+      return false;
+    }
+
+    function updateGates(dt){
+      const dx = (speed * speedMul) * (dt/1000);
+
+      for(let i=gates.length-1;i>=0;i--){
+        const g = gates[i];
+        g.pulse += 0.03*(dt/16.7);
+        g.x -= dx;
+
+        // scoring when passed
+        if(!g.passed && g.x + g.w < ball.x - ball.r){
+          g.passed=true;
+          score++;
+          scoreEl.textContent = String(score);
+
+          // speed ramps
+          speed += speedAdd;
+          speedMul = 1.0 + Math.min(1.35, score*0.018);
+          accel = 8 + score*0.25;
+
+          spdEl.textContent = `Скорость: ${(speedMul).toFixed(2)}×`;
+        }
+
+        if(g.x + g.w < -80){
+          gates.splice(i,1);
+        }
+      }
+    }
+
+    function lose(text){
+      if(lost) return;
+      running=false; paused=false; lost=true;
+      overlay.classList.remove('hidden');
+      panel.querySelector('.big').textContent = 'Поражение 😵';
+      panel.querySelector('.tiny').innerHTML = `<span class="err">${text}</span>`;
+      hintEl.textContent = 'Нажми R или Рестарт.';
+    }
+
+    function drawScene(now){
+      fctx.clearRect(0,0,W,H);
+
+      // soft vignette
+      const v = fctx.createRadialGradient(W*0.5, H*0.5, Math.min(W,H)*0.20, W*0.5, H*0.5, Math.max(W,H)*0.75);
+      v.addColorStop(0,'rgba(0,0,0,0)');
+      v.addColorStop(1,'rgba(0,0,0,0.26)');
+      fctx.fillStyle=v;
+      fctx.fillRect(0,0,W,H);
+
+      // “tunnel” lines (parallax)
+      fctx.save();
+      fctx.globalAlpha = 0.22;
+      fctx.strokeStyle = 'rgba(207,239,255,0.35)';
+      fctx.lineWidth = 2;
+
+      const lines = 7;
+      for(let i=0;i<lines;i++){
+        const y = (H*(0.18 + i*(0.64/(lines-1))));
+        fctx.beginPath();
+        fctx.moveTo(0, y + Math.sin(now*0.001 + i)*6);
+        fctx.lineTo(W, y + Math.sin(now*0.001 + i)*6);
+        fctx.stroke();
+      }
+      fctx.restore();
+
+      // gates
+      for(const g of gates){
+        const x=g.x, w=g.w;
+        const gapTop = g.gapY - g.gapH*0.5;
+        const gapBot = g.gapY + g.gapH*0.5;
+        const pulse = 1 + Math.sin(g.pulse)*0.04;
+
+        // top rect
+        drawGateRect(x, 0, w, gapTop, pulse);
+        // bottom rect
+        drawGateRect(x, gapBot, w, H-gapBot, pulse);
+
+        // outline the gap edges
+        fctx.save();
+        fctx.strokeStyle = 'rgba(101,255,178,0.22)';
+        fctx.lineWidth = 2;
+        fctx.beginPath();
+        fctx.moveTo(x, gapTop);
+        fctx.lineTo(x+w, gapTop);
+        fctx.moveTo(x, gapBot);
+        fctx.lineTo(x+w, gapBot);
+        fctx.stroke();
+        fctx.restore();
+      }
+
+      // ball
+      fctx.save();
+      fctx.shadowColor='rgba(0,0,0,0.40)';
+      fctx.shadowBlur=18;
+      fctx.shadowOffsetY=10;
+
+      const glow = fctx.createRadialGradient(ball.x-ball.r*0.25, ball.y-ball.r*0.25, 4, ball.x, ball.y, ball.r*1.4);
+      glow.addColorStop(0,'rgba(207,239,255,0.95)');
+      glow.addColorStop(0.55,'rgba(159,216,255,0.55)');
+      glow.addColorStop(1,'rgba(20,70,100,0.45)');
+      fctx.fillStyle = glow;
+      fctx.beginPath();
+      fctx.arc(ball.x, ball.y, ball.r*(1+Math.sin(now*0.01)*0.04), 0, Math.PI*2);
+      fctx.fill();
+
+      fctx.lineWidth=2;
+      fctx.strokeStyle='rgba(207,239,255,0.28)';
+      fctx.stroke();
+      fctx.restore();
+
+      // mic hint near ball
+      if(micEnabled && calibrated){
+        fctx.save();
+        fctx.font='800 12px system-ui';
+        fctx.fillStyle='rgba(234,247,255,0.80)';
+        fctx.textAlign='left';
+        fctx.textBaseline='middle';
+        fctx.fillText(`Голос: ${(loud*100)|0}%`, ball.x + 24, ball.y);
+        fctx.restore();
+      }
+    }
+
+    function drawGateRect(x,y,w,h,pulse){
+      if(h<=0) return;
+      fctx.save();
+      fctx.shadowColor='rgba(0,0,0,0.45)';
+      fctx.shadowBlur=22;
+      fctx.shadowOffsetY=12;
+
+      const g = fctx.createLinearGradient(x, y, x+w, y+h);
+      g.addColorStop(0, `rgba(101,255,178,${0.10*pulse})`);
+      g.addColorStop(0.45, `rgba(159,216,255,${0.12*pulse})`);
+      g.addColorStop(1, `rgba(6,18,32,${0.65*pulse})`);
+      fctx.fillStyle=g;
+
+      roundRect(x,y,w,h,16);
+      fctx.fill();
+
+      fctx.lineWidth=2;
+      fctx.strokeStyle='rgba(207,239,255,0.14)';
+      fctx.stroke();
+
+      // inner shine
+      fctx.globalAlpha=0.35;
+      fctx.strokeStyle='rgba(255,255,255,0.10)';
+      fctx.lineWidth=2;
+      roundRect(x+8,y+8,w-16,h-16,12);
+      fctx.stroke();
+
+      fctx.restore();
+    }
+
+    function roundRect(x,y,w,h,r){
+      r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+      fctx.beginPath();
+      fctx.moveTo(x+r, y);
+      fctx.lineTo(x+w-r, y);
+      fctx.quadraticCurveTo(x+w, y, x+w, y+r);
+      fctx.lineTo(x+w, y+h-r);
+      fctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+      fctx.lineTo(x+r, y+h);
+      fctx.quadraticCurveTo(x, y+h, x, y+h-r);
+      fctx.lineTo(x, y+r);
+      fctx.quadraticCurveTo(x, y, x+r, y);
+      fctx.closePath();
+    }
+
+    // ===== Loop =====
+    let last = performance.now();
+    function loop(now){
+      const dt = Math.min(33, now-last);
+      last = now;
+
+      drawBG();
+
+      readMic(now);
+
+      if(running && !paused && !lost){
+        // passive accel
+        speed += accel * (dt/1000);
+
+        if(now >= nextGateAt || gates.length===0){
+          spawnGate(now);
+        }
+
+        ballControl(dt);
+        updateGates(dt);
+
+        // collision
+        for(const g of gates){
+          if(collideGate(g)){
+            lose('Врезался в препятствие.');
+            break;
+          }
+        }
+      }
+
+      drawScene(now);
+
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // ===== UI =====
+    function showMenu(){
+      running=false; paused=false; lost=false;
+      overlay.classList.remove('hidden');
+      panel.querySelector('.big').textContent = 'Пение — полёт';
+      panel.querySelector('.tiny').innerHTML = 'Громче = выше. Тише = ниже. Скорость постепенно растёт.';
+      hintEl.textContent = micEnabled ? 'Нажми Старт и пой 🎶' : 'Включи микрофон и начни петь 🎶';
+    }
+
+    function start(){
+      if(!micEnabled){
+        hintEl.textContent = 'Сначала включи микрофон 🎤';
+        return;
+      }
+      if(!calibrated){
+        hintEl.textContent = 'Подожди калибровку (1 сек тишины).';
+        return;
+      }
+      overlay.classList.add('hidden');
+      running=true; paused=false; lost=false;
+      hintEl.textContent = 'Пой/гуди — держи шарик в воротах!';
+    }
+
+    function togglePause(){
+      if(!running && !paused) return;
+      paused = !paused;
+      if(paused){
+        overlay.classList.remove('hidden');
+        panel.querySelector('.big').textContent = 'Пауза';
+        panel.querySelector('.tiny').innerHTML = 'Нажми <b>P</b>, чтобы продолжить.';
+        hintEl.textContent = 'Пауза.';
+      }else{
+        overlay.classList.add('hidden');
+        hintEl.textContent = 'Пой/гуди — держи шарик в воротах!';
+      }
+    }
+
+    micBtn.addEventListener('click', async ()=>{
+      if(micEnabled){ disableMic(); return; }
+      await enableMic();
+    });
+
+    startBtn.addEventListener('click', ()=>{
+      resetGame();
+      start();
+    });
+
+    helpBtn.addEventListener('click', ()=>{
+      help.style.display = (help.style.display==='none') ? 'block' : 'none';
+    });
+
+    pauseBtn.addEventListener('click', ()=> togglePause());
+    restartBtn.addEventListener('click', ()=>{
+      resetGame();
+      if(!lost) overlay.classList.add('hidden');
+      if(running || (!overlay.classList.contains('hidden'))) start();
+    });
+
+    backBtn.addEventListener('click', ()=>{
+      // вернуться на главную страницу игры
+      // поменяй путь, если у тебя главный файл называется иначе
+      location.href = 'index.html';
+    });
+
+    addEventListener('keydown', (e)=>{
+      const k = e.key.toLowerCase();
+      if(k==='p') togglePause();
+      if(k==='r'){
+        resetGame();
+        start();
+      }
+      if(k==='escape'){
+        showMenu();
+      }
+    }, {passive:true});
+
+    // boot
+    resetGame();
+    showMenu();
+
+  })();
+  </script>
+</body>
+</html>
