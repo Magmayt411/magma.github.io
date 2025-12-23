@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Глубокие шахты Нортленда</title>
+  <style>
+    :root{
+      --bg1:#061220;
+      --bg2:#0a2a3d;
+      --ice:#cfefff;
+      --ice2:#9fd8ff;
+      --danger:#ff6b6b;
+      --ok:#65ffb2;
+      --shadow: rgba(0,0,0,.35);
+      --purple:#b56cff;
+    }
+    *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color: transparent; }
+    html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#eaf7ff; }
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 30% 20%, rgba(159,216,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 80% 10%, rgba(207,239,255,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+    .frost{
+      position:fixed; inset:-40px;
+      background:
+        radial-gradient(800px 400px at 20% 10%, rgba(207,239,255,.10), transparent 60%),
+        radial-gradient(700px 380px at 70% 0%, rgba(207,239,255,.08), transparent 60%),
+        radial-gradient(900px 500px at 50% 100%, rgba(159,216,255,.08), transparent 65%);
+      pointer-events:none;
+    }
+    #game{ position:fixed; inset:0; }
+    canvas{ position:absolute; inset:0; width:100%; height:100%; }
+
+    .hud{
+      position:fixed; top:16px; left:16px; right:16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      pointer-events:none;
+    }
+    .pill{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px var(--shadow);
+      border: 1px solid rgba(207,239,255,.18);
+      flex-wrap:wrap;
+      pointer-events:none;
+    }
+    .score{ font-weight:700; letter-spacing:.2px; display:flex; align-items:baseline; gap:8px; }
+    .score span{ color: var(--ice2); font-size: 22px; }
+    .tiny{ opacity:.9; font-size:12px; letter-spacing:.2px; }
+    .btnRow{ display:flex; gap:10px; pointer-events:auto; flex-wrap:wrap; justify-content:flex-end; }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(207,239,255,.22);
+      color:#eaf7ff;
+      background: rgba(6,18,32,.45);
+      backdrop-filter: blur(10px);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow: 0 10px 25px var(--shadow);
+      font-weight:600;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease, opacity .12s ease;
+      white-space:nowrap;
+    }
+    button:hover{ border-color: rgba(207,239,255,.35); transform: translateY(-1px); }
+    button:active{ transform: translateY(0px); }
+
+    .centerOverlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+    .panel{
+      width:min(560px, calc(100% - 32px));
+      border-radius:22px;
+      background: rgba(6,18,32,.55);
+      border: 1px solid rgba(207,239,255,.20);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(14px);
+      padding:18px 18px 14px;
+      pointer-events:auto;
+      position:relative;
+      overflow:hidden;
+    }
+    .title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+    h1{ margin:0; font-size:22px; letter-spacing:.3px; }
+    .badge{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(207,239,255,.22);
+      background: rgba(207,239,255,.08);
+      color: rgba(234,247,255,.95);
+      white-space:nowrap;
+    }
+    .panel p{ margin:10px 0; line-height:1.45; opacity:.95; }
+    .panel .big{ font-size:18px; font-weight:800; margin-top:4px; margin-bottom:10px; }
+    .panel .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .panel .actions button{ border-radius:14px; padding:12px 14px; }
+    .primary{ border-color: rgba(101,255,178,.35) !important; background: rgba(101,255,178,.12) !important; }
+    .danger{ border-color: rgba(255,107,107,.35) !important; background: rgba(255,107,107,.10) !important; }
+    .hidden{ display:none !important; }
+
+    .footerHint{
+      position:fixed; bottom:12px; left:0; right:0;
+      text-align:center; font-size:12px; opacity:.7; pointer-events:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="frost"></div>
+
+  <div id="game">
+    <canvas id="bg"></canvas>
+    <canvas id="fx"></canvas>
+  </div>
+
+  <div class="hud">
+    <div class="pill">
+      <div class="score">Счёт: <span id="score">0</span></div>
+      <div class="tiny" id="hp">Жизни: 3</div>
+      <div class="tiny" id="black">Чёрных: 0</div>
+      <div class="tiny" id="miss">Мимо: 0/10</div>
+      <div class="tiny" id="collapse">Обвал: —</div>
+      <div class="tiny" id="batHud">Мышь: —</div>
+      <div class="tiny" id="info">WASD — бег, 🖱️ — клики</div>
+    </div>
+    <div class="btnRow">
+      <button id="pauseBtn" title="P">Пауза</button>
+      <button id="restartBtn" title="R">Рестарт</button>
+      <button id="backBtn" title="Esc">Назад</button>
+    </div>
+  </div>
+
+  <div class="centerOverlay" id="overlay">
+    <div class="panel" id="startPanel">
+      <div class="title">
+        <h1>Глубокие шахты Нортленда</h1>
+        <div class="badge">шахта 2</div>
+      </div>
+      <p class="big">Обвалы + камни + мышь + фиолетовые волны.</p>
+      <p class="tiny">
+        <b>Обвал:</b> успей <b>WASD</b> уйти на безопасную половину (экран трясёт).<br/>
+        <b>Камни:</b> обычные — много кликов, чёрные — после первого удара “летят” и ускоряются.<br/>
+        <b>10 кликов подряд мимо</b> — проигрыш.<br/>
+        <b>Летучая мышь:</b> иногда вылетает — набивай шкалу: печатай <b>out</b> и жми <b>Enter</b>.
+        Шкала падает — если упала до нуля, проигрыш. Пока мышь на экране — камни/обвалы остановлены,
+        существующие камни исчезают без штрафа. Ещё летят <b>фиолетовые звуковые волны</b> — уведи курсор, если волна попала по курсору — проигрыш.
+        <br/><b>Кап сложности:</b> максимальное усложнение ограничено <b>x2</b>.
+      </p>
+      <div class="actions">
+        <button class="primary" id="startBtn">Начать</button>
+        <button class="danger" id="toPrevBtn">В меню</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pausePanel">
+      <div class="title">
+        <h1>Пауза</h1>
+        <div class="badge">нажми P</div>
+      </div>
+      <p>Переведи дыхание 🙂</p>
+      <div class="actions">
+        <button class="primary" id="resumeBtn">Продолжить</button>
+        <button class="danger" id="pauseRestartBtn">Рестарт</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="losePanel">
+      <div class="title">
+        <h1>Поражение</h1>
+        <div class="badge" id="finalBadge">счёт: 0</div>
+      </div>
+      <p class="big" id="loseReason">—</p>
+      <p class="tiny" id="stats">—</p>
+      <div class="actions">
+        <button class="primary" id="againBtn">Ещё раз</button>
+        <button class="danger" id="menuBtn">В меню</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footerHint" id="footerHint">Нажми «Начать». WASD — пауза нет, P — пауза 🙂</div>
+
+<script>
+(() => {
+  const bg = document.getElementById('bg');
+  const fx = document.getElementById('fx');
+  const bctx = bg.getContext('2d');
+  const fctx = fx.getContext('2d');
+
+  const scoreEl = document.getElementById('score');
+  const hpEl = document.getElementById('hp');
+  const blackEl = document.getElementById('black');
+  const missEl = document.getElementById('miss');
+  const collapseEl = document.getElementById('collapse');
+  const batHudEl = document.getElementById('batHud');
+  const footerHint = document.getElementById('footerHint');
+
+  const overlay = document.getElementById('overlay');
+  const startPanel = document.getElementById('startPanel');
+  const pausePanel = document.getElementById('pausePanel');
+  const losePanel = document.getElementById('losePanel');
+  const finalBadge = document.getElementById('finalBadge');
+  const loseReason = document.getElementById('loseReason');
+  const stats = document.getElementById('stats');
+
+  const startBtn = document.getElementById('startBtn');
+  const toPrevBtn = document.getElementById('toPrevBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const backBtn = document.getElementById('backBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const pauseRestartBtn = document.getElementById('pauseRestartBtn');
+  const againBtn = document.getElementById('againBtn');
+  const menuBtn = document.getElementById('menuBtn');
+
+  // ===== Utils =====
+  const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let W=0, H=0, dpr=DPR();
+  const rand = (a,b)=>Math.random()*(b-a)+a;
+  const clamp01 = (v)=>Math.max(0, Math.min(1,v));
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+  // ===== Difficulty cap (x2 max) =====
+  const DIFF_CAP = 2.0;
+  const diffMul = () => Math.min(DIFF_CAP, 1 + score * 0.03);
+  const diffMulSoft = () => Math.min(DIFF_CAP, 1 + score * 0.02);
+
+  // курсор (для волн)
+  const cursor = { x: 0, y: 0, has: false };
+
+  function resize(){
+    dpr = DPR();
+    W = Math.floor(window.innerWidth);
+    H = Math.floor(window.innerHeight);
+    for(const c of [bg,fx]){
+      c.width = Math.floor(W*dpr);
+      c.height = Math.floor(H*dpr);
+      c.style.width = W+'px';
+      c.style.height = H+'px';
+    }
+    bctx.setTransform(dpr,0,0,dpr,0,0);
+    fctx.setTransform(dpr,0,0,dpr,0,0);
+    initSnow();
+    player.x = clamp(player.x, player.r+10, W-player.r-10);
+    player.y = clamp(player.y, player.r+90, H-player.r-20);
+  }
+  window.addEventListener('resize', resize, {passive:true});
+
+  // ===== Background snow =====
+  const flakes = [];
+  const FLAKES = 140;
+  function initSnow(){
+    flakes.length=0;
+    for(let i=0;i<FLAKES;i++){
+      flakes.push({
+        x: rand(0,W), y: rand(0,H),
+        r: rand(0.8,2.4),
+        vx: rand(-0.25,0.25),
+        vy: rand(0.6,1.6),
+        wob: rand(0,Math.PI*2),
+        wobSpd: rand(0.006,0.018),
+        a: rand(0.25,0.85)
+      });
+    }
+  }
+  function drawBackground(){
+    bctx.clearRect(0,0,W,H);
+    const g = bctx.createRadialGradient(W*0.35, H*0.15, 10, W*0.35, H*0.15, Math.max(W,H)*0.8);
+    g.addColorStop(0, 'rgba(159,216,255,0.18)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    bctx.fillStyle = g;
+    bctx.fillRect(0,0,W,H);
+
+    for(const f of flakes){
+      f.wob += f.wobSpd;
+      f.x += f.vx + Math.sin(f.wob)*0.25;
+      f.y += f.vy;
+      if (f.y > H + 10) { f.y = -10; f.x = rand(0,W); }
+      if (f.x < -10) f.x = W + 10;
+      if (f.x > W + 10) f.x = -10;
+      bctx.beginPath();
+      bctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      bctx.fillStyle = `rgba(207,239,255,${f.a})`;
+      bctx.fill();
+    }
+  }
+
+  // ===== Game state =====
+  let running=false, paused=false, lost=false;
+  let score=0;
+  let hp=3;
+
+  // Игрок
+  const player = { x: 0, y: 0, r: 14, speed: 300 };
+
+  // Управление
+  const keys = {w:false,a:false,s:false,d:false};
+
+  // Камни
+  const rocks = [];
+  let rockSpawnTimer = 0;
+  let rockNextSpawn = 900;
+
+  // Обвалы
+  let cave = {
+    phase: 'idle',
+    side: 'left',
+    t: 0,
+    warnMs: 900,
+    slamMs: 1100,
+    coolMs: 1600
+  };
+  let collapseTimer = 0;
+  let nextCollapse = 2600;
+
+  // Летучая мышь (ивент)
+  let bat = {
+    active: false,
+    x: 0,
+    y: 0,
+    dir: 1,
+    wing: 0,
+    wingSpd: 0.015,
+    bar: 0.0,
+    decayPerSec: 0.06,
+    addPerHit: 0.18,
+    typed: '',
+    typedFlash: 0,
+    timer: 0,
+    next: 14000,
+
+    // новое: перелёты по половинам
+    hopTimer: 0,
+    hopEvery: 2000,
+    hopSide: 'left',
+    targetX: 0,
+    targetY: 0
+  };
+
+  // фиолетовые волны
+  const waves = []; // {x,y,vx,vy,spawn,life,r}
+  let waveTimer = 0;
+  let waveEvery = 260; // ms
+  const cursorHitRadius = 10;
+
+  function scheduleBat(){
+    // кап по сложности тоже влияет: не укорачиваем бесконечно
+    const dm = diffMulSoft(); // <=2
+    const base = 16000 - (dm-1)*6000; // максимум -6000
+    bat.next = Math.max(9000, base) + rand(-2500, 3500);
+    bat.timer = 0;
+  }
+
+  // Статистика
+  let spawned=0, broken=0, blackBroken=0, clicks=0;
+  let missStreak=0;
+
+  // Particles
+  const particles=[];
+  function burstIce(x,y,rad, pow=1){
+    const n = Math.floor((16 + rad*0.45) * pow);
+    const now = performance.now();
+    for(let i=0;i<n;i++){
+      const a=rand(0,Math.PI*2), sp=rand(0.8,4.2)*pow;
+      particles.push({x,y,vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:rand(1.1,3.2), life:rand(360,720), born:now});
+    }
+    particles.push({ring:true,x,y,r:Math.max(10,rad*0.55), life:260, born:now});
+  }
+  function updateDrawParticles(now, dt){
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      const age=now-p.born;
+      if(age>=p.life){ particles.splice(i,1); continue; }
+      const t=age/p.life;
+      const a=1-t;
+      if(p.ring){
+        const rr = p.r + t*40;
+        fctx.beginPath();
+        fctx.arc(p.x,p.y,rr,0,Math.PI*2);
+        fctx.lineWidth=2;
+        fctx.strokeStyle=`rgba(207,239,255,${0.35*a})`;
+        fctx.stroke();
+      }else{
+        p.vy += 0.016*dt;
+        p.x += p.vx*(dt/16.7);
+        p.y += p.vy*(dt/16.7);
+        p.vx *= 0.99; p.vy *= 0.99;
+        fctx.beginPath();
+        fctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        fctx.fillStyle=`rgba(207,239,255,${0.85*a})`;
+        fctx.fill();
+      }
+    }
+  }
+
+  // ===== UI helpers =====
+  function hideAllPanels(){
+    startPanel.classList.add('hidden');
+    pausePanel.classList.add('hidden');
+    losePanel.classList.add('hidden');
+  }
+  function showStart(){
+    running=false; paused=false; lost=false;
+    overlay.classList.remove('hidden');
+    hideAllPanels();
+    startPanel.classList.remove('hidden');
+    footerHint.textContent='Нажми «Начать». WASD — движение, кликай по камням.';
+  }
+  function showPause(){
+    overlay.classList.remove('hidden');
+    hideAllPanels();
+    pausePanel.classList.remove('hidden');
+  }
+  function hideOverlay(){
+    overlay.classList.add('hidden');
+    hideAllPanels();
+  }
+
+  function setHUD(){
+    scoreEl.textContent = String(score);
+    hpEl.textContent = `Жизни: ${hp}`;
+    blackEl.textContent = `Чёрных: ${blackBroken}`;
+    missEl.textContent = `Мимо: ${missStreak}/10`;
+
+    if(bat.active){
+      const pct = Math.round(bat.bar*100);
+      batHudEl.textContent = `Мышь: ${pct}% (out + Enter)`;
+    } else {
+      batHudEl.textContent = 'Мышь: —';
+    }
+  }
+
+  function loseGame(reason){
+    running=false; paused=false; lost=true;
+    overlay.classList.remove('hidden');
+    hideAllPanels();
+    losePanel.classList.remove('hidden');
+
+    finalBadge.textContent = `счёт: ${score}`;
+    loseReason.textContent =
+      reason === 'collapse' ? 'Тебя накрыл обвал.' :
+      reason === 'hp' ? 'Ты выбился из сил.' :
+      reason === 'bat' ? 'Летучая мышь победила.' :
+      reason === 'miss' ? '10 кликов подряд мимо.' :
+      reason === 'wave' ? 'Фиолетовая волна задела курсор.' :
+      'Поражение.';
+
+    const acc = spawned ? Math.round((broken/spawned)*100) : 0;
+    stats.textContent = `Камней: ${spawned}, разбито: ${broken} (${acc}%), чёрных: ${blackBroken}, кликов: ${clicks}, мимо подряд: ${missStreak}.`;
+  }
+
+  // ===== Spawning =====
+  function scheduleRockSpawn(){
+    const base = 1000, min = 420;
+    // кап: не ускоряемся больше чем x2
+    const k = diffMul(); // <=2
+    rockNextSpawn = Math.max(min, base / k) + rand(-80,120);
+  }
+  function rockLifeMs(){
+    const base = 5200, min = 2400;
+    const k = diffMulSoft(); // <=2
+    return Math.max(min, base / k) + rand(-220,260);
+  }
+  function spawnRock(){
+    const dm = diffMulSoft(); // <=2
+    const isBlack = Math.random() < Math.min(0.20, 0.06 + Math.min(0.10, score*0.004)); // шанс как был, но и так капится min(0.20)
+    const r = rand(28, 46) * (1 + Math.min(0.15, (dm-1)*0.15)); // визуально чуть растет, но кап
+    const x = rand(r+18, W-r-18);
+    const y = rand(r+110, H-r-28);
+
+    const hpMax = isBlack ? 5 : (2 + (Math.random()*4|0));
+    rocks.push({
+      x,y,r,
+      hp: hpMax,
+      hpMax,
+      born: performance.now(),
+      life: rockLifeMs(),
+      type: isBlack ? 'black' : 'normal',
+      flying: false,
+      vx: 0, vy: 0,
+      accel: 1.0
+    });
+    spawned++;
+  }
+
+  // ===== Collapse scheduling =====
+  function scheduleCollapse(){
+    const base = 3200, min = 1700;
+    const k = diffMulSoft(); // <=2
+    nextCollapse = Math.max(min, base / k) + rand(-200, 280);
+  }
+  function pickSide(){
+    const sides = ['left','right','top','bottom'];
+    return sides[(Math.random()*sides.length)|0];
+  }
+  function startCollapse(){
+    cave.phase='warn';
+    cave.side = pickSide();
+    cave.t = 0;
+  }
+  function dangerZoneRect(){
+    const padTop = 72;
+    const halfW = W/2;
+    const halfH = (H - padTop)/2;
+
+    if(cave.side==='left')  return {x:0, y:padTop, w:halfW, h:H-padTop};
+    if(cave.side==='right') return {x:halfW, y:padTop, w:halfW, h:H-padTop};
+    if(cave.side==='top')   return {x:0, y:padTop, w:W, h:halfH};
+    return {x:0, y:padTop+halfH, w:W, h:halfH};
+  }
+  function playerInRect(r){
+    return (player.x >= r.x && player.x <= r.x+r.w && player.y >= r.y && player.y <= r.y+r.h);
+  }
+
+  // ===== Screen shake (camera) =====
+  function getShake(now){
+    if(!running || paused || lost) return {x:0,y:0};
+    if(bat.active) return {x:0,y:0};
+
+    let amp = 0;
+    if(cave.phase === 'warn'){
+      const t = clamp01(cave.t / cave.warnMs);
+      amp = 2 + 6*t;
+    } else if(cave.phase === 'slam'){
+      const tt = clamp01((cave.t - cave.warnMs) / cave.slamMs);
+      amp = 10 + 18*(1-tt*0.15);
+    }
+    if(amp <= 0) return {x:0,y:0};
+
+    const nx = (Math.sin(now*0.06) + Math.sin(now*0.17)*0.6);
+    const ny = (Math.cos(now*0.05) + Math.sin(now*0.13)*0.7);
+    const rx = rand(-1,1);
+    const ry = rand(-1,1);
+    return { x:(nx*0.7 + rx*0.9)*amp, y:(ny*0.7 + ry*0.9)*amp };
+  }
+
+  // ===== Drawing =====
+  function drawPlayer(now){
+    const pulse = 1 + Math.sin(now*0.012)*0.04;
+    fctx.save();
+    fctx.shadowColor='rgba(0,0,0,0.45)';
+    fctx.shadowBlur=18;
+    fctx.shadowOffsetY=10;
+
+    const g = fctx.createRadialGradient(player.x-player.r*0.25, player.y-player.r*0.35, 6, player.x, player.y, player.r*1.8);
+    g.addColorStop(0,'rgba(234,247,255,0.95)');
+    g.addColorStop(0.55,'rgba(159,216,255,0.60)');
+    g.addColorStop(1,'rgba(20,70,100,0.45)');
+    fctx.fillStyle=g;
+    fctx.beginPath();
+    fctx.arc(player.x, player.y, player.r*pulse, 0, Math.PI*2);
+    fctx.fill();
+
+    fctx.fillStyle='rgba(6,18,32,0.55)';
+    fctx.beginPath();
+    fctx.arc(player.x + player.r*0.22, player.y - player.r*0.10, player.r*0.14, 0, Math.PI*2);
+    fctx.fill();
+
+    fctx.restore();
+  }
+
+  function drawRock(rk, now){
+    const age = now - rk.born;
+    const k = clamp01(age / rk.life);
+    const alpha = 1 - Math.max(0,(k-0.80)/0.20)*0.85;
+
+    fctx.save();
+    fctx.shadowColor='rgba(0,0,0,0.35)';
+    fctx.shadowBlur=18;
+    fctx.shadowOffsetY=10;
+
+    const pts=11;
+    const ang0 = now*0.0012 + rk.x*0.0007;
+    fctx.beginPath();
+    for(let i=0;i<=pts;i++){
+      const a = ang0 + (i/pts)*Math.PI*2;
+      const wob = 0.14*Math.sin(a*3 + ang0*4) + 0.08*Math.cos(a*5 - ang0*3);
+      const rad = rk.r*(1+wob);
+      const px = rk.x + Math.cos(a)*rad;
+      const py = rk.y + Math.sin(a)*rad;
+      if(i===0) fctx.moveTo(px,py); else fctx.lineTo(px,py);
+    }
+    fctx.closePath();
+
+    const isBlack = rk.type==='black';
+    const baseA = isBlack ? 0.92 : 0.88;
+
+    const grad = fctx.createRadialGradient(rk.x-rk.r*0.25, rk.y-rk.r*0.35, rk.r*0.2, rk.x, rk.y, rk.r*1.25);
+    if(isBlack){
+      grad.addColorStop(0, `rgba(40,50,70,${baseA*alpha})`);
+      grad.addColorStop(0.55, `rgba(12,16,24,${0.92*alpha})`);
+      grad.addColorStop(1, `rgba(0,0,0,${0.85*alpha})`);
+    }else{
+      grad.addColorStop(0, `rgba(207,239,255,${0.95*alpha})`);
+      grad.addColorStop(0.55, `rgba(159,216,255,${0.55*alpha})`);
+      grad.addColorStop(1, `rgba(20,70,100,${0.45*alpha})`);
+    }
+    fctx.fillStyle=grad;
+    fctx.fill();
+
+    fctx.lineWidth=2;
+    fctx.strokeStyle = isBlack ? `rgba(255,107,107,${0.25*alpha})` : `rgba(207,239,255,${0.35*alpha})`;
+    fctx.stroke();
+    fctx.restore();
+
+    const hpK = rk.hp / rk.hpMax;
+    fctx.beginPath();
+    fctx.arc(rk.x, rk.y, rk.r*0.78, -Math.PI/2, -Math.PI/2 + Math.PI*2*hpK);
+    fctx.lineWidth=3;
+    fctx.strokeStyle = isBlack ? 'rgba(255,107,107,0.75)' : 'rgba(101,255,178,0.55)';
+    fctx.stroke();
+
+    return k >= 1;
+  }
+
+  function drawCollapse(now){
+    if(bat.active){
+      collapseEl.textContent = 'Обвал: —';
+      return;
+    }
+
+    const dz = dangerZoneRect();
+    const tWarn = clamp01(cave.t / cave.warnMs);
+    const tSlam = clamp01((cave.t - cave.warnMs) / cave.slamMs);
+
+    if(cave.phase==='idle'){
+      collapseEl.textContent = `Обвал: ${(Math.max(0,nextCollapse-collapseTimer)/1000).toFixed(1)}с`;
+      return;
+    }
+    if(cave.phase==='warn'){
+      collapseEl.textContent = `Обвал! ${(Math.max(0,cave.warnMs-cave.t)/1000).toFixed(1)}с`;
+    } else if(cave.phase==='slam'){
+      collapseEl.textContent = `Завал! ${(Math.max(0,cave.slamMs-(cave.t-cave.warnMs))/1000).toFixed(1)}с`;
+    } else {
+      collapseEl.textContent = `Обвал: ${(Math.max(0,nextCollapse-collapseTimer)/1000).toFixed(1)}с`;
+    }
+
+    if(cave.phase==='warn'){
+      fctx.save();
+      const pulse = 0.10 + 0.10*Math.sin(now*0.02);
+      fctx.fillStyle = `rgba(255,107,107,${(0.10 + pulse)*tWarn})`;
+      fctx.fillRect(dz.x,dz.y,dz.w,dz.h);
+
+      fctx.lineWidth=3;
+      fctx.strokeStyle=`rgba(255,107,107,${0.50*tWarn})`;
+      fctx.strokeRect(dz.x+1.5,dz.y+1.5,dz.w-3,dz.h-3);
+      fctx.restore();
+      return;
+    }
+
+    if(cave.phase==='slam'){
+      fctx.save();
+
+      const g = fctx.createLinearGradient(dz.x, dz.y, dz.x+dz.w, dz.y+dz.h);
+      g.addColorStop(0,'rgba(10,14,22,0.92)');
+      g.addColorStop(0.55,'rgba(20,28,44,0.92)');
+      g.addColorStop(1,'rgba(0,0,0,0.92)');
+      fctx.fillStyle = g;
+
+      let slide = tSlam;
+      let x=dz.x, y=dz.y, w=dz.w, h=dz.h;
+
+      if(cave.side==='left')  { w = dz.w * slide; }
+      if(cave.side==='right') { w = dz.w * slide; x = dz.x + dz.w - w; }
+      if(cave.side==='top')   { h = dz.h * slide; }
+      if(cave.side==='bottom'){ h = dz.h * slide; y = dz.y + dz.h - h; }
+
+      fctx.fillRect(x, y, w, h);
+
+      fctx.globalAlpha = 0.35;
+      fctx.strokeStyle='rgba(207,239,255,0.10)';
+      fctx.lineWidth=2;
+      for(let i=0;i<8;i++){
+        fctx.beginPath();
+        const ax = x + rand(0,w), ay = y + rand(0,h);
+        fctx.moveTo(ax,ay);
+        fctx.lineTo(ax + rand(-80,80), ay + rand(-80,80));
+        fctx.stroke();
+      }
+      fctx.globalAlpha = 1;
+
+      for(let i=0;i<18;i++){
+        fctx.beginPath();
+        fctx.arc(x+rand(0,w), y+rand(0,h), rand(0.8,1.9), 0, Math.PI*2);
+        fctx.fillStyle='rgba(255,255,255,0.06)';
+        fctx.fill();
+      }
+
+      fctx.save();
+      fctx.strokeStyle='rgba(255,255,255,0.08)';
+      fctx.lineWidth=3;
+      if(cave.side==='left')  { fctx.beginPath(); fctx.moveTo(x+w, y); fctx.lineTo(x+w, y+h); fctx.stroke(); }
+      if(cave.side==='right') { fctx.beginPath(); fctx.moveTo(x, y);   fctx.lineTo(x,   y+h); fctx.stroke(); }
+      if(cave.side==='top')   { fctx.beginPath(); fctx.moveTo(x, y+h); fctx.lineTo(x+w, y+h); fctx.stroke(); }
+      if(cave.side==='bottom'){ fctx.beginPath(); fctx.moveTo(x, y);   fctx.lineTo(x+w, y);   fctx.stroke(); }
+      fctx.restore();
+
+      fctx.restore();
+    }
+  }
+
+  // ===== Bat drawing + UI =====
+  function drawBat(now){
+    if(!bat.active) return;
+
+    const bx = bat.x;
+    const by = bat.y;
+
+    const wing = Math.sin(bat.wing) * 0.9;
+
+    fctx.save();
+    fctx.shadowColor='rgba(0,0,0,0.55)';
+    fctx.shadowBlur=22;
+    fctx.shadowOffsetY=12;
+
+    const bodyR = 18;
+    const bodyG = fctx.createRadialGradient(bx-6, by-8, 4, bx, by, 34);
+    bodyG.addColorStop(0,'rgba(70,80,110,0.95)');
+    bodyG.addColorStop(0.55,'rgba(10,14,22,0.95)');
+    bodyG.addColorStop(1,'rgba(0,0,0,0.85)');
+    fctx.fillStyle = bodyG;
+    fctx.beginPath();
+    fctx.arc(bx, by, bodyR, 0, Math.PI*2);
+    fctx.fill();
+
+    fctx.lineWidth = 3;
+    fctx.strokeStyle = 'rgba(207,239,255,0.10)';
+    fctx.fillStyle = 'rgba(0,0,0,0.35)';
+
+    function wingPath(sign){
+      const w = 64, h = 36;
+      const a = wing * sign;
+      fctx.beginPath();
+      fctx.moveTo(bx + sign*14, by-2);
+      fctx.quadraticCurveTo(bx + sign*(24+w*0.25), by - (14+h*0.2) - a*10, bx + sign*(24+w), by - 4 - a*8);
+      fctx.quadraticCurveTo(bx + sign*(30+w*0.65), by + (10+h*0.5) + a*10, bx + sign*(18+w*0.25), by + 18 + a*6);
+      fctx.quadraticCurveTo(bx + sign*22, by + 10, bx + sign*14, by-2);
+      fctx.closePath();
+    }
+
+    wingPath(-1); fctx.fill(); fctx.stroke();
+    wingPath( 1); fctx.fill(); fctx.stroke();
+
+    fctx.shadowBlur = 0;
+    fctx.fillStyle = 'rgba(255,107,107,0.85)';
+    fctx.beginPath(); fctx.arc(bx-6, by-4, 2.2, 0, Math.PI*2); fctx.fill();
+    fctx.beginPath(); fctx.arc(bx+6, by-4, 2.2, 0, Math.PI*2); fctx.fill();
+
+    fctx.restore();
+
+    // панель
+    const px = W*0.5, py = 118;
+    const w = Math.min(520, W-40), h = 92;
+    const x = px - w/2, y = py;
+
+    fctx.save();
+    fctx.shadowColor='rgba(0,0,0,0.45)';
+    fctx.shadowBlur=22;
+    fctx.shadowOffsetY=12;
+
+    const pg = fctx.createLinearGradient(x,y,x+w,y+h);
+    pg.addColorStop(0,'rgba(6,18,32,0.55)');
+    pg.addColorStop(1,'rgba(6,18,32,0.40)');
+    fctx.fillStyle = pg;
+    roundRect(fctx, x, y, w, h, 18);
+    fctx.fill();
+
+    fctx.lineWidth=1;
+    fctx.strokeStyle='rgba(207,239,255,0.18)';
+    fctx.stroke();
+
+    fctx.shadowBlur=0;
+    fctx.font = '800 14px system-ui';
+    fctx.fillStyle='rgba(234,247,255,0.92)';
+    fctx.textAlign='left';
+    fctx.textBaseline='top';
+    fctx.fillText('Летучая мышь! OUT + Enter. Уводи курсор от фиолетовых волн!', x+16, y+12);
+
+    const barX = x+16, barY = y+40, barW = w-32, barH = 10;
+    roundRect(fctx, barX, barY, barW, barH, 8);
+    fctx.fillStyle='rgba(255,255,255,0.08)';
+    fctx.fill();
+
+    const fillW = barW * clamp01(bat.bar);
+    roundRect(fctx, barX, barY, fillW, barH, 8);
+    fctx.fillStyle = (bat.bar < 0.25) ? 'rgba(255,107,107,0.75)' : 'rgba(101,255,178,0.55)';
+    fctx.fill();
+
+    const flash = clamp01(bat.typedFlash);
+    fctx.font = '900 18px system-ui';
+    fctx.fillStyle = `rgba(207,239,255,${0.85 + flash*0.15})`;
+    fctx.textAlign='left';
+    fctx.textBaseline='middle';
+
+    const shown = (bat.typed.length ? bat.typed.toUpperCase() : '...');
+    fctx.fillText(`Ввод: ${shown}`, x+16, y+70);
+
+    fctx.restore();
+  }
+
+  // ===== Waves =====
+  function spawnWave(){
+    const tx = cursor.has ? cursor.x : W*0.5;
+    const ty = cursor.has ? cursor.y : H*0.5;
+
+    const sx = bat.x;
+    const sy = bat.y;
+
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const l = Math.hypot(dx,dy) || 1;
+    const nx = dx/l, ny = dy/l;
+
+    const dm = diffMulSoft(); // <=2
+    const speed = 520 * (0.85 + 0.25*(dm-1)); // чуть растет, но кап
+    const now = performance.now();
+    waves.push({
+      x: sx, y: sy,
+      vx: nx*speed,
+      vy: ny*speed,
+      spawn: now,
+      life: 900 * 3,
+      r: 10
+    });
+  }
+
+  function updateDrawWaves(now, dt){
+    if(!bat.active) { waves.length = 0; return; }
+
+    waveTimer += dt;
+    while(waveTimer >= waveEvery){
+      waveTimer -= waveEvery;
+      spawnWave();
+    }
+
+    for(let i=waves.length-1;i>=0;i--){
+      const w = waves[i];
+      const age = now - w.spawn;
+      if(age >= w.life){ waves.splice(i,1); continue; }
+
+      const t = age / w.life;
+      w.x += w.vx * (dt/1000);
+      w.y += w.vy * (dt/1000);
+      const rr = w.r + t*38;
+
+      if(cursor.has){
+        const dx = cursor.x - w.x;
+        const dy = cursor.y - w.y;
+        const dist = Math.hypot(dx,dy);
+        if(dist <= rr + cursorHitRadius){
+          loseGame('wave');
+          return;
+        }
+      }
+
+      const a = (1 - t);
+      fctx.save();
+      fctx.shadowColor = 'rgba(181,108,255,0.55)';
+      fctx.shadowBlur = 14;
+
+      fctx.beginPath();
+      fctx.arc(w.x, w.y, rr, 0, Math.PI*2);
+      fctx.lineWidth = 3;
+      fctx.strokeStyle = `rgba(181,108,255,${0.55*a})`;
+      fctx.stroke();
+
+      fctx.beginPath();
+      fctx.arc(w.x, w.y, rr*0.45, 0, Math.PI*2);
+      fctx.lineWidth = 2;
+      fctx.strokeStyle = `rgba(181,108,255,${0.25*a})`;
+      fctx.stroke();
+
+      fctx.restore();
+    }
+
+    if(cursor.has){
+      fctx.save();
+      fctx.beginPath();
+      fctx.arc(cursor.x, cursor.y, cursorHitRadius, 0, Math.PI*2);
+      fctx.strokeStyle = 'rgba(181,108,255,0.20)';
+      fctx.lineWidth = 2;
+      fctx.stroke();
+      fctx.restore();
+    }
+  }
+
+  function roundRect(ctx, x,y,w,h,r){
+    r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+  }
+
+  // ===== Input =====
+  function getPointerPos(e){
+    const rect = fx.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  window.addEventListener('pointermove', (e)=>{
+    const rect = fx.getBoundingClientRect();
+    cursor.x = e.clientX - rect.left;
+    cursor.y = e.clientY - rect.top;
+    cursor.has = true;
+  }, {passive:true});
+
+  function hitRock(px,py){
+    for(let i=rocks.length-1;i>=0;i--){
+      const r=rocks[i];
+      const dx=px-r.x, dy=py-r.y;
+      if(dx*dx+dy*dy <= r.r*r.r){
+        clicks++;
+
+        if(r.type==='black' && !r.flying){
+          r.flying = true;
+          const ax = (player.x - r.x);
+          const ay = (player.y - r.y);
+          const len = Math.hypot(ax,ay) || 1;
+          const nx = ax/len, ny = ay/len;
+
+          const dm = diffMulSoft(); // <=2
+          const base = 180 + score*4;
+          const capped = base * (0.85 + 0.15*dm); // мягкий кап, не улетает бесконечно
+          r.vx = nx * capped;
+          r.vy = ny * capped;
+
+          r.accel = 1.06;
+        }
+
+        r.hp -= 1;
+        burstIce(r.x,r.y,r.r*0.45, r.type==='black'?1.2:1.0);
+
+        if(r.type==='black' && r.flying){
+          r.vx *= r.accel;
+          r.vy *= r.accel;
+          r.accel = Math.min(1.18, r.accel + 0.02);
+        }
+
+        if(r.hp <= 0){
+          broken++;
+          if(r.type === 'black') blackBroken++;
+          score += (r.type==='black') ? 3 : 1;
+          setHUD();
+          burstIce(r.x,r.y,r.r, r.type==='black'?1.4:1.1);
+          rocks.splice(i,1);
+          return true;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  fx.addEventListener('pointerdown', (e)=>{
+    if(!running || paused || lost) return;
+    if(bat.active) return;
+
+    const {x,y} = getPointerPos(e);
+    const ok = hitRock(x,y);
+
+    if(ok){
+      missStreak = 0;
+      setHUD();
+      return;
+    }
+
+    missStreak++;
+    setHUD();
+    burstIce(x,y,12,0.7);
+
+    if(missStreak >= 10){
+      loseGame('miss');
+    }
+  }, {passive:true});
+
+  // ===== Movement & simulation =====
+  function updatePlayer(dt){
+    let mx=0,my=0;
+    if(keys.w) my -= 1;
+    if(keys.s) my += 1;
+    if(keys.a) mx -= 1;
+    if(keys.d) mx += 1;
+    const len = Math.hypot(mx,my) || 1;
+    if(mx!==0 || my!==0){ mx/=len; my/=len; }
+
+    player.x += mx * player.speed * (dt/1000);
+    player.y += my * player.speed * (dt/1000);
+
+    player.x = clamp(player.x, player.r+10, W-player.r-10);
+    player.y = clamp(player.y, player.r+90, H-player.r-20);
+  }
+
+  function updateRocks(now, dt){
+    for(const r of rocks){
+      if(r.type==='black' && r.flying){
+        r.x += r.vx * (dt/1000);
+        r.y += r.vy * (dt/1000);
+
+        const top = 86;
+        if(r.x < r.r+10){ r.x = r.r+10; r.vx *= -1; }
+        if(r.x > W-r.r-10){ r.x = W-r.r-10; r.vx *= -1; }
+        if(r.y < top + r.r){ r.y = top + r.r; r.vy *= -1; }
+        if(r.y > H-r.r-16){ r.y = H-r.r-16; r.vy *= -1; }
+
+        const dm = diffMulSoft(); // <=2
+        const pull = (18 + score*0.2) * (0.8 + 0.2*dm);
+        const ax = player.x - r.x;
+        const ay = player.y - r.y;
+        const l = Math.hypot(ax,ay) || 1;
+        const nx=ax/l, ny=ay/l;
+        r.vx += nx * pull * (dt/1000);
+        r.vy += ny * pull * (dt/1000);
+      }
+    }
+
+    for(let i=rocks.length-1;i>=0;i--){
+      const r=rocks[i];
+      const age = now - r.born;
+      if(age >= r.life){
+        rocks.splice(i,1);
+        hp -= 1;
+        setHUD();
+        burstIce(player.x, player.y, 26, 1.2);
+        if(hp <= 0) loseGame('hp');
+      }
+    }
+  }
+
+  function updateCollapse(now, dt){
+    if(bat.active) return;
+
+    collapseTimer += dt;
+
+    if(cave.phase==='idle'){
+      if(collapseTimer >= nextCollapse){
+        collapseTimer = 0;
+        scheduleCollapse();
+        startCollapse();
+      }
+      return;
+    }
+
+    cave.t += dt;
+
+    if(cave.phase==='warn'){
+      if(cave.t >= cave.warnMs){
+        cave.phase='slam';
+      }
+      return;
+    }
+
+    if(cave.phase==='slam'){
+      const dz = dangerZoneRect();
+      if(playerInRect(dz)){
+        loseGame('collapse');
+        return;
+      }
+      if(cave.t >= cave.warnMs + cave.slamMs){
+        cave.phase='clear';
+      }
+      return;
+    }
+
+    if(cave.phase==='clear'){
+      if(cave.t >= cave.warnMs + cave.slamMs + cave.coolMs){
+        cave.phase='idle';
+        cave.t = 0;
+      }
+    }
+  }
+
+  // ===== Bat logic (new hop every 2s, alternating halves with reach limits) =====
+  function batPickTarget(side){
+    // “Из левой части она не может достать до самого края правой и наоборот”
+    // Значит: левая зона НЕ до правого края, правая зона НЕ до левого.
+    // Дадим перекрытие вокруг центра, но запретим дальние края.
+    const minX = (side === 'left') ? W*0.10 : W*0.35;
+    const maxX = (side === 'left') ? W*0.65 : W*0.90;
+    const y1 = 130;
+    const y2 = Math.min(260, H*0.35);
+    bat.targetX = rand(minX, maxX);
+    bat.targetY = rand(y1, y2);
+  }
+
+  function startBat(){
+    rocks.length = 0;
+
+    bat.active = true;
+    bat.bar = 0.55;
+    bat.typed = '';
+    bat.typedFlash = 0;
+    bat.wing = 0;
+    bat.dir = (Math.random() < 0.5) ? 1 : -1;
+
+    bat.x = (bat.dir > 0) ? -60 : (W+60);
+    bat.y = rand(130, 240);
+
+    // hop init
+    bat.hopTimer = 0;
+    bat.hopEvery = 2000;
+    bat.hopSide = 'left';
+    batPickTarget(bat.hopSide);
+
+    waves.length = 0;
+    waveTimer = 0;
+
+    setHUD();
+  }
+
+  function endBat(){
+    bat.active = false;
+    bat.typed = '';
+    bat.typedFlash = 0;
+    waves.length = 0;
+    scheduleBat();
+    setHUD();
+  }
+
+  function updateBat(now, dt){
+    if(!bat.active){
+      bat.timer += dt;
+      if(bat.timer >= bat.next && running && !paused && !lost){
+        startBat();
+      }
+      return;
+    }
+
+    bat.bar -= bat.decayPerSec * (dt/1000);
+    if(bat.bar <= 0){
+      bat.bar = 0;
+      setHUD();
+      loseGame('bat');
+      return;
+    }
+
+    // hop timer: каждые 2 секунды — смена стороны и новая цель
+    bat.hopTimer += dt;
+    if(bat.hopTimer >= bat.hopEvery){
+      bat.hopTimer = 0;
+      bat.hopSide = (bat.hopSide === 'left') ? 'right' : 'left';
+      batPickTarget(bat.hopSide);
+    }
+
+    // быстро летим к target (ощущение “рывка”), но без телепорта
+    const dm = diffMulSoft(); // <=2
+    const chase = 0.10 + 0.04*(dm-1); // кап: max 0.14
+    bat.x += (bat.targetX - bat.x) * chase * (dt/16.7);
+    bat.y += (bat.targetY - bat.y) * (chase*0.8) * (dt/16.7);
+
+    // легкая болтанка крыльев
+    bat.wing += bat.wingSpd * dt;
+    bat.typedFlash = Math.max(0, bat.typedFlash - dt/140);
+
+    setHUD();
+  }
+
+  // ===== Panels + controls =====
+  function resetGame(){
+    score=0; hp=3;
+    spawned=0; broken=0; blackBroken=0, clicks=0;
+    missStreak=0;
+
+    rocks.length=0;
+
+    rockSpawnTimer=0;
+    scheduleRockSpawn();
+
+    cave.phase='idle';
+    cave.t=0;
+    collapseTimer=0;
+    scheduleCollapse();
+
+    bat.active=false;
+    waves.length=0;
+    waveTimer=0;
+    scheduleBat();
+
+    player.x = W*0.5;
+    player.y = H*0.70;
+
+    setHUD();
+    collapseEl.textContent='Обвал: —';
+    footerHint.textContent='WASD — бег. 10 мимо подряд = поражение. Мышь: out+Enter, уводи курсор. Кап сложности x2.';
+  }
+
+  function startGame(){
+    resetGame();
+    running=true; paused=false; lost=false;
+    hideOverlay();
+  }
+
+  function togglePause(force){
+    if(!running && !paused) return;
+    paused = (typeof force==='boolean') ? force : !paused;
+    if(paused) showPause();
+    else hideOverlay();
+  }
+
+  function goBack(){
+    window.history.back();
+  }
+
+  startBtn.addEventListener('click', startGame);
+  toPrevBtn.addEventListener('click', goBack);
+  pauseBtn.addEventListener('click', ()=>togglePause());
+  restartBtn.addEventListener('click', startGame);
+  backBtn.addEventListener('click', goBack);
+  resumeBtn.addEventListener('click', ()=>togglePause(false));
+  pauseRestartBtn.addEventListener('click', startGame);
+  againBtn.addEventListener('click', startGame);
+  menuBtn.addEventListener('click', showStart);
+
+  window.addEventListener('keydown', (e)=>{
+    const k = e.key;
+
+    if(bat.active && running && !paused && !lost){
+      if(k === 'Enter'){
+        const v = (bat.typed || '').trim().toLowerCase();
+        if(v === 'out'){
+          bat.bar = clamp01(bat.bar + bat.addPerHit);
+          bat.typedFlash = 1.0;
+          bat.typed = '';
+          burstIce(W*0.5, 140, 20, 1.2);
+
+          if(bat.bar >= 1){
+            score += 2;
+            setHUD();
+            endBat();
+          } else {
+            setHUD();
+          }
+        } else {
+          bat.bar = Math.max(0, bat.bar - 0.06);
+          bat.typedFlash = 0.6;
+          bat.typed = '';
+          setHUD();
+        }
+        e.preventDefault();
+        return;
+      }
+
+      if(k === 'Backspace'){
+        bat.typed = bat.typed.slice(0,-1);
+        bat.typedFlash = 0.5;
+        setHUD();
+        e.preventDefault();
+        return;
+      }
+
+      if(k.length === 1){
+        const ch = k.toLowerCase();
+        if(ch >= 'a' && ch <= 'z'){
+          bat.typed = (bat.typed + ch).slice(0, 8);
+          bat.typedFlash = 0.45;
+          setHUD();
+          e.preventDefault();
+          return;
+        }
+      }
+      return;
+    }
+
+    const key = k.toLowerCase();
+
+    if(key==='p'){ togglePause(); return; }
+    if(key==='escape'){ goBack(); return; }
+    if(key==='r'){ startGame(); return; }
+
+    if(key==='w') keys.w=true;
+    if(key==='a') keys.a=true;
+    if(key==='s') keys.s=true;
+    if(key==='d') keys.d=true;
+  }, {passive:false});
+
+  window.addEventListener('keyup', (e)=>{
+    const k = e.key.toLowerCase();
+    if(k==='w') keys.w=false;
+    if(k==='a') keys.a=false;
+    if(k==='s') keys.s=false;
+    if(k==='d') keys.d=false;
+  }, {passive:true});
+
+  // ===== Main loop =====
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(33, now-last);
+    last = now;
+
+    drawBackground();
+
+    fctx.setTransform(dpr,0,0,dpr,0,0);
+    fctx.clearRect(0,0,W,H);
+
+    const shake = getShake(now);
+
+    fctx.save();
+    fctx.translate(shake.x, shake.y);
+
+    if(running && !paused && !lost){
+      updateBat(now, dt);
+
+      if(!bat.active){
+        rockSpawnTimer += dt;
+        if(rockSpawnTimer >= rockNextSpawn){
+          rockSpawnTimer = 0;
+          spawnRock();
+          scheduleRockSpawn();
+        }
+
+        updatePlayer(dt);
+        updateRocks(now, dt);
+        if(!lost) updateCollapse(now, dt);
+      } else {
+        updateDrawWaves(now, dt);
+        if(lost) { fctx.restore(); requestAnimationFrame(frame); return; }
+      }
+    }
+
+    for(const r of rocks) drawRock(r, now);
+    drawCollapse(now);
+    drawPlayer(now);
+    drawBat(now);
+
+    if(bat.active && running && !paused && !lost){
+      updateDrawWaves(now, 0);
+    }
+
+    updateDrawParticles(now, dt);
+
+    fctx.restore();
+
+    requestAnimationFrame(frame);
+  }
+
+  // Boot
+  resize();
+  player.x = window.innerWidth*0.5;
+  player.y = window.innerHeight*0.70;
+  setHUD();
+  showStart();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
