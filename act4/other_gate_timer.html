@@ -130,9 +130,10 @@
     <div class="panel">
       <div class="row">
         <div class="tiny" style="max-width:560px;">
-          Монстр приходит сам по себе (каждый раз через <b>случайные 2–5 минут</b>).
+          Монстр приходит сам по себе (каждый раз через <b>случайные 30с–3мин</b>).
           Когда пришёл — у тебя <b>20 секунд</b> нажать <b>ПРОБЕЛ</b>.
           Если нажмёшь <b>пробел не вовремя 3 раза подряд</b> — проигрыш.
+          <br>Пауза замораживает всё время.
         </div>
         <div class="tiny">P — пауза • Esc — меню</div>
       </div>
@@ -153,7 +154,7 @@
   <div class="overlay" id="pauseOverlay">
     <div class="panel">
       <div class="big">Пауза</div>
-      <p class="hint">Нажми <b>P</b>, чтобы продолжить.</p>
+      <p class="hint">Нажми <b>P</b>, чтобы продолжить. (В паузе время не идёт.)</p>
       <div class="btnRow" style="margin-top:10px;">
         <button id="resumeBtn">Продолжить</button>
         <button id="restartBtn">Рестарт</button>
@@ -197,9 +198,9 @@
   const menuBtn = document.getElementById('menuBtn');
 
   // ====== Config ======
-  const MONSTER_WINDOW_MS = 20000;
-  const MIN_INTERVAL_MS = 30 * 1000;
-  const MAX_INTERVAL_MS = 3 * 60 * 1000;
+  const MONSTER_WINDOW_MS = 20000;       // 20 секунд на реакцию
+  const MIN_INTERVAL_MS = 30 * 1000;     // 30 секунд
+  const MAX_INTERVAL_MS = 3 * 60 * 1000; // 3 минуты
 
   // ====== Helpers ======
   const rand = (a,b)=> Math.random()*(b-a)+a;
@@ -234,6 +235,7 @@
 
     sfxGain = audioCtx.createGain();
     sfxGain.gain.value = 1.0;
+
     sfxGain.connect(master);
     master.connect(audioCtx.destination);
   }
@@ -259,7 +261,6 @@
     o1.type = 'sawtooth';
     o2.type = 'triangle';
 
-    // “горн” (подстрой по вкусу)
     o1.frequency.setValueAtTime(220, t);
     o2.frequency.setValueAtTime(110, t);
     o1.frequency.exponentialRampToValueAtTime(196, t + dur);
@@ -293,7 +294,6 @@
     ng.gain.exponentialRampToValueAtTime(0.35, t + 0.03);
     ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
 
-    // микс
     o1.connect(lp); o2.connect(lp);
     lp.connect(g); g.connect(sfxGain);
 
@@ -333,7 +333,7 @@
     lp.frequency.setValueAtTime(900, t);
 
     const g = audioCtx.createGain();
-    // прям еле слышно:
+    // еле слышно (можешь менять 0.06)
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(0.06, t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -346,14 +346,12 @@
 
   function startFootstepsLoop(){
     stopFootstepsLoop();
-    // шаги “не ровно”, чтобы было живее
     footstepTimer = setInterval(()=>{
-      if (!monsterActive || paused || lost) return;
+      if (!monsterActive || paused || lost || !sfxOn) return;
       playSoftSnowStep();
-      // иногда второй быстрый “шорк”
       if (Math.random() < 0.18) {
-        setTimeout(()=> {
-          if (!monsterActive || paused || lost) return;
+        setTimeout(()=>{
+          if (!monsterActive || paused || lost || !sfxOn) return;
           playSoftSnowStep();
         }, 90 + Math.random()*70);
       }
@@ -372,45 +370,51 @@
   let paused = false;
   let lost = false;
 
-  let startTime = 0;          // для бесконечного таймера
-  let nextMonsterAt = 0;      // когда появится следующий (абсолютное время performance.now)
-  let monsterActive = false;  // монстр сейчас идёт
-  let monsterStart = 0;       // когда начались 20 секунд
+  // Игровое время (не идёт на паузе)
+  let gameTimeMs = 0;
 
-  let missSpaceStreak = 0;    // 3 промаха подряд = поражение
+  // Таймеры событий (всё на dt, чтобы пауза замораживала)
+  let timeToNextMonster = 0; // сколько осталось ждать до появления
+  let monsterActive = false;
+  let monsterTimerMs = 0;    // сколько прошло из 20 секунд
 
-  function scheduleNextMonster(now){
-    // каждый раз новое случайное время 2..5 минут
-    nextMonsterAt = now + rand(MIN_INTERVAL_MS, MAX_INTERVAL_MS);
+  // 3 промаха пробела подряд вне окна
+  let missSpaceStreak = 0;
+
+  function scheduleNextMonster(){
+    timeToNextMonster = rand(MIN_INTERVAL_MS, MAX_INTERVAL_MS); // дробные тоже
   }
 
-  function showMonster(now){
+  function showMonster(){
     monsterActive = true;
-    monsterStart = now;
+    monsterTimerMs = 0;
+
     monsterBar.style.display = '';
     monsterFill.style.width = '100%';
 
     setStatus(`Статус: <b class="bad">монстр рядом</b> — у тебя 20 секунд! Нажми <b>ПРОБЕЛ</b>.`);
 
-    // тихие шаги по снегу пока идёт таймер монстра
     startFootstepsLoop();
   }
 
   function hideMonster(){
     monsterActive = false;
+    monsterTimerMs = 0;
     monsterBar.style.display = 'none';
     stopFootstepsLoop();
   }
 
-  function winMonster(now){
-    // убил — звук горна, монстр уходит, таймер времени НЕ сбрасываем
+  function winMonster(){
     playHornBlow();
+
     hideMonster();
-    missSpaceStreak = 0; // можно обнулить серию ошибок после успеха
+
+    // успех — сбрасываем серию "не вовремя"
+    missSpaceStreak = 0;
     missesEl.textContent = String(missSpaceStreak);
 
-    setStatus(`Статус: <b class="ok">монстр убит</b>. Следующий придёт сам по себе позже.`);
-    scheduleNextMonster(now);
+    setStatus(`Статус: <b class="ok">монстр убит</b>. Следующий придёт позже (случайно).`);
+    scheduleNextMonster();
   }
 
   function loseGame(reason){
@@ -426,10 +430,14 @@
   function setPaused(v){
     paused = v;
     pauseOverlay.classList.toggle('show', paused);
+
+    // если включили паузу — убираем шаги (чтоб не тикали)
+    if (paused) stopFootstepsLoop();
+    else if (monsterActive && !lost && sfxOn) startFootstepsLoop();
   }
 
   function goMenu(){
-    // поменяй имя главного файла если у тебя не index.html
+    // поменяй, если у тебя главный файл называется иначе
     window.location.href = 'index.html';
   }
 
@@ -442,10 +450,10 @@
     missSpaceStreak = 0;
     missesEl.textContent = String(missSpaceStreak);
 
-    const now = performance.now();
-    startTime = now;
+    gameTimeMs = 0;
+
     hideMonster();
-    scheduleNextMonster(now);
+    scheduleNextMonster();
 
     setStatus(`Статус: <b>ожидание</b>… Монстр может прийти в любой момент. Слушай.`);
   }
@@ -467,21 +475,29 @@
     last = now;
 
     if (started){
-      // бесконечный таймер времени
-      elapsedEl.textContent = formatElapsed(now - startTime);
+      // ВАЖНО: начисляем время ТОЛЬКО если не пауза и не проигрыш
+      if (!paused && !lost){
+        gameTimeMs += dt;
+      }
+      elapsedEl.textContent = formatElapsed(gameTimeMs);
 
       if (!paused && !lost){
-        // проверяем: пора ли появиться монстру
-        if (!monsterActive && now >= nextMonsterAt){
-          showMonster(now);
+        // ожидание монстра
+        if (!monsterActive){
+          timeToNextMonster -= dt;
+          if (timeToNextMonster <= 0){
+            showMonster();
+          }
         }
 
-        // если монстр активен — обновляем 20-сек бар и проверяем проигрыш по времени
+        // монстр активен — 20 секунд тикают
         if (monsterActive){
-          const p = clamp01((now - monsterStart) / MONSTER_WINDOW_MS);
+          monsterTimerMs += dt;
+
+          const p = clamp01(monsterTimerMs / MONSTER_WINDOW_MS);
           monsterFill.style.width = ((1 - p) * 100).toFixed(2) + '%';
 
-          if (now - monsterStart >= MONSTER_WINDOW_MS){
+          if (monsterTimerMs >= MONSTER_WINDOW_MS){
             loseGame('Ты не успел за 20 секунд — монстр дошёл.');
           }
         }
@@ -493,12 +509,12 @@
   requestAnimationFrame(tick);
 
   // ====== Input ======
-  function onSpacePress(now){
+  function onSpacePress(){
     if (!started || paused || lost) return;
 
     if (monsterActive){
       // вовремя -> победа
-      winMonster(now);
+      winMonster();
       return;
     }
 
@@ -515,7 +531,6 @@
 
   window.addEventListener('keydown', (e)=>{
     const k = e.key.toLowerCase();
-    const now = performance.now();
 
     if (k === 'p'){
       if (!started || lost) return;
@@ -529,7 +544,7 @@
       return;
     }
     if (k === ' ' || k === 'spacebar'){
-      onSpacePress(now);
+      onSpacePress();
       e.preventDefault();
       return;
     }
@@ -552,6 +567,7 @@
     await resumeAudio();
     sfxOn = !sfxOn;
     sfxBtn.textContent = `Звук: ${sfxOn ? 'ON' : 'OFF'}`;
+
     if (!sfxOn) stopFootstepsLoop();
     else if (monsterActive && !paused && !lost) startFootstepsLoop();
   });
