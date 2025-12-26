@@ -8,20 +8,19 @@
     :root{
       --bg0:#07070b;
       --bg1:#0b1020;
-      --accent:#7cf7ff;
-      --accent2:#b48cff;
-      --danger:#ff4d6d;
-      --ok:#3dffb5;
-      --gold:#ffd27c;
       --stroke: rgba(255,255,255,.14);
       --shadow: 0 20px 70px rgba(0,0,0,.55);
       --shadow2: 0 10px 30px rgba(0,0,0,.45);
+      --danger:#ff4d6d;
+      --ok:#3dffb5;
+      --gold:#ffd27c;
+      --text:#eaf0ff;
     }
     *{ box-sizing:border-box; }
     html,body{
       height:100%; margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      color:#eaf0ff;
+      color:var(--text);
       background: radial-gradient(1200px 600px at 50% 30%, #1a2452 0%, var(--bg1) 45%, var(--bg0) 100%);
       overflow:hidden;
     }
@@ -41,7 +40,7 @@
       animation: drift 20s linear infinite;
       pointer-events:none;
     }
-    @keyframes drift{ 0%{ transform: translate3d(0,0,0) scale(1);} 100%{ transform: translate3d(-3%,2%,0) scale(1.02);} }
+    @keyframes drift{ to{ transform: translate3d(-3%,2%,0) scale(1.02);} }
 
     .wrap{
       position:relative;
@@ -51,7 +50,6 @@
       gap:18px;
       padding:18px;
     }
-
     .card{
       border-radius:22px;
       background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -60,7 +58,7 @@
       overflow:hidden;
     }
 
-    /* Left scene */
+    /* Scene */
     .scene{
       position:relative;
       border-radius:22px;
@@ -91,7 +89,7 @@
       pointer-events:none;
     }
     .fog.f2{ bottom:-25%; opacity:.35; filter: blur(14px); animation-duration: 18s; }
-    @keyframes fogMove{ from{ transform: translateX(-2%) translateY(0);} to{ transform: translateX(2%) translateY(-1%);} }
+    @keyframes fogMove{ to{ transform: translateX(2%) translateY(-1%);} }
 
     .ground{
       position:absolute; left:0; right:0; bottom:0;
@@ -113,13 +111,13 @@
       mask-image: radial-gradient(80% 65% at 50% 10%, rgba(0,0,0,1) 0%, rgba(0,0,0,.9) 40%, transparent 80%);
     }
 
-    /* Enemy */
+    /* Enemy - NO labels */
     .enemy{
       position:absolute;
       left: 8%;
       bottom: 21%;
-      width: 170px;
-      height: 170px;
+      width: 190px;
+      height: 190px;
       border-radius: 22px;
       border:1px solid rgba(255,255,255,.18);
       background: linear-gradient(145deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
@@ -140,14 +138,12 @@
       60%  { left: 48%;  transform: translateX(0) scale(1.0);  filter: blur(0px); }
       100% { left: 76%;  transform: translateX(0) scale(1.18); filter: blur(0px); }
     }
-
     .enemyBadge{
       width: 92%;
       height: 92%;
       border-radius: 18px;
       display:grid;
-      align-content:center;
-      justify-items:center;
+      place-items:center;
       position:relative;
       overflow:hidden;
     }
@@ -160,7 +156,6 @@
       filter: blur(12px);
     }
     @keyframes spin{ to{ transform: rotate(360deg); } }
-
     .enemyInner{
       position:relative;
       width: 100%;
@@ -172,12 +167,13 @@
         radial-gradient(160px 160px at 80% 70%, rgba(180,140,255,.16), transparent 60%),
         linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.48));
       display:grid;
-      grid-template-rows: 1fr auto;
-      gap:10px;
+      place-items:center;
       box-shadow: inset 0 0 60px rgba(0,0,0,.55);
       padding: 10px;
     }
     .enemyArt{
+      width: 100%;
+      height: 100%;
       border-radius: 16px;
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.05);
@@ -195,13 +191,11 @@
       mix-blend-mode: screen;
       opacity:.75;
     }
-    .enemyArt svg{ width: 92%; height: 92%; filter: drop-shadow(0 12px 22px rgba(0,0,0,.55)); }
-    .enemyMeta{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding: 4px 2px 0;
+    .enemyArt svg{
+      width: 96%;
+      height: 96%;
+      filter: drop-shadow(0 12px 22px rgba(0,0,0,.55));
     }
-    .enemyName{ font-weight: 820; letter-spacing: .3px; font-size: 12.5px; opacity:.95; line-height:1.2; }
-    .enemyHint{ font-size: 12px; opacity:.72; white-space:nowrap; }
 
     /* Castle */
     .castle{
@@ -213,7 +207,7 @@
       opacity:.95;
     }
 
-    /* Right HUD */
+    /* HUD */
     .hud{
       display:grid;
       grid-template-rows: auto auto 1fr;
@@ -254,7 +248,7 @@
     .dot.pause{ background: var(--gold); box-shadow: 0 0 0 6px rgba(255,210,124,.12); }
 
     .panel{ padding:14px 16px 16px; }
-    .big{ font-size: 34px; font-weight: 950; letter-spacing: .5px; margin: 6px 0 2px; }
+    .big{ font-size: 30px; font-weight: 950; letter-spacing: .4px; margin: 6px 0 2px; }
     .sub{ font-size: 13px; opacity: .75; }
     .divider{ height:1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent); margin: 12px 0; }
 
@@ -309,8 +303,6 @@
       border:1px solid rgba(255,255,255,.16);
       background: rgba(255,255,255,.06);
     }
-
-    /* Progress only for 20s alarm */
     .progress{ height: 10px; border-radius: 999px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); overflow:hidden; }
     .bar{
       height: 100%;
@@ -322,7 +314,7 @@
     }
 
     /* Codex */
-    .codex{ padding: 12px 16px 16px; max-height: 320px; overflow:auto; }
+    .codex{ padding: 12px 16px 16px; max-height: 330px; overflow:auto; }
     .codex h3{ margin:0 0 10px; font-size:13px; letter-spacing:.4px; opacity:.85; }
     .codexGrid{ display:grid; grid-template-columns: 1fr; gap:10px; }
     .codexItem{
@@ -392,13 +384,13 @@
     .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
     .toast .spark{
       width:10px; height:10px; border-radius: 50%;
-      background: var(--accent);
+      background: rgba(124,247,255,.95);
       box-shadow: 0 0 0 6px rgba(124,247,255,.10), 0 0 22px rgba(124,247,255,.22);
     }
 
     canvas#fx{ position:absolute; inset:0; pointer-events:none; opacity:.9; }
 
-    /* Start overlay */
+    /* Start overlay (audio required) */
     .overlay{
       position:fixed; inset:0;
       background: radial-gradient(900px 600px at 50% 40%, rgba(124,247,255,.10), rgba(0,0,0,.82) 55%, rgba(0,0,0,.92) 100%);
@@ -408,7 +400,7 @@
       padding: 18px;
     }
     .overlayBox{
-      width: min(520px, 96%);
+      width: min(560px, 96%);
       border-radius: 24px;
       border:1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.35);
@@ -417,7 +409,7 @@
       padding: 18px;
     }
     .overlayTitle{ font-weight: 950; font-size: 22px; letter-spacing:.3px; margin: 0 0 8px; }
-    .overlayText{ opacity:.78; font-size: 13px; line-height:1.4; margin: 0 0 14px; }
+    .overlayText{ opacity:.78; font-size: 13px; line-height:1.45; margin: 0 0 14px; }
     .muted{ opacity:.72; }
   </style>
 </head>
@@ -426,8 +418,8 @@
     <div class="overlayBox">
       <div class="overlayTitle">Пост у Замка</div>
       <p class="overlayText">
-        Нажми <b>СТАРТ</b> — включится напряжённая музыка, тихие шаги врага и звук горна.
-        <br><span class="muted">Пауза: <span class="kbd">P</span> • Горн: <span class="kbd">Пробел</span></span>
+        Правила тревоги: <b>за 20 секунд</b> подай отчёт (выбери тип 1–10 → «Подать отчёт»), затем <b>ПРОБЕЛ</b> — горн.
+        <br><span class="muted">Пауза: <span class="kbd">P</span>. Если вкладка не активна — время не идёт. Звук обязателен.</span>
       </p>
       <button id="btnStart">▶️ СТАРТ</button>
     </div>
@@ -442,18 +434,16 @@
         <div id="toastText">…</div>
       </div>
 
+      <!-- Enemy: ONLY picture -->
       <div class="enemy" id="enemy">
         <div class="enemyBadge">
           <div class="enemyInner">
             <div class="enemyArt" id="enemyArt"></div>
-            <div class="enemyMeta">
-              <div class="enemyName" id="enemyName">Враг</div>
-              <div class="enemyHint muted">Отчёт → пробел</div>
-            </div>
           </div>
         </div>
       </div>
 
+      <!-- Castle SVG -->
       <svg class="castle" viewBox="0 0 900 520" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="g" x1="450" y1="60" x2="450" y2="520" gradientUnits="userSpaceOnUse">
@@ -509,7 +499,7 @@
       </div>
 
       <div class="card panel">
-        <div class="sub">Текущая тревога</div>
+        <div class="sub">Инструкция</div>
         <div class="big" id="alarmTitle">Тишина на тракте</div>
         <div class="sub" id="alarmSub">Время до появления скрыто.</div>
 
@@ -517,12 +507,12 @@
 
         <div class="row">
           <div>
-            <label for="typeSelect">Тип врага (отчёт)</label>
+            <label for="typeSelect">Отчёт: выбрать тип врага</label>
             <select id="typeSelect"></select>
           </div>
           <div>
             <label for="note">Заметка (необязательно)</label>
-            <input id="note" type="text" placeholder="например: 'идёт по центру тракта'"/>
+            <input id="note" type="text" placeholder="например: 'идёт быстро'"/>
           </div>
         </div>
 
@@ -540,19 +530,19 @@
           </div>
           <div class="progress"><div class="bar" id="bar"></div></div>
           <div class="statusLine muted">
-            <span>Подсказка</span>
+            <span>Состояние</span>
             <span id="hint">Жди контакта</span>
           </div>
         </div>
       </div>
 
       <div class="card codex">
-        <h3>Справочник дозора (как различить)</h3>
+        <h3>Справочник различий (ТИПЫ 1–10)</h3>
         <div class="codexGrid" id="codexGrid"></div>
       </div>
 
       <div class="card log">
-        <h3>Журнал тревог</h3>
+        <h3>Журнал</h3>
         <div id="log"></div>
       </div>
     </aside>
@@ -560,91 +550,6 @@
 
 <script>
 (() => {
-  // ---------- SVG enemies ----------
-  function svgWrap(paths, accent="rgba(124,247,255,.35)"){
-    return `
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="rgba(255,255,255,.14)"/>
-            <stop offset="1" stop-color="rgba(255,255,255,.04)"/>
-          </linearGradient>
-          <filter id="sh" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2.2" result="b"/>
-            <feColorMatrix in="b" type="matrix"
-              values="0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 0.55 0"/>
-            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <circle cx="50" cy="50" r="46" fill="${accent}" opacity="0.22"/>
-        <circle cx="50" cy="50" r="44" fill="rgba(0,0,0,.22)" stroke="rgba(255,255,255,.12)"/>
-        <g filter="url(#sh)">
-          <path d="${paths}" fill="url(#s)" stroke="rgba(255,255,255,.10)" stroke-width="1.2" />
-        </g>
-      </svg>
-    `;
-  }
-
-  const ENEMIES = [
-    { id:"warg",     name:"Варг-разведчик",  art: svgWrap("M20 62 Q30 45 40 50 Q47 35 60 42 Q70 35 78 45 Q88 55 78 62 Q70 67 64 64 Q58 72 48 70 Q42 78 34 73 Q28 70 28 66 Q22 66 20 62 Z"),
-      tell:"Профиль зверя: вытянутая морда, острые уши, низкая посадка." },
-    { id:"raider",   name:"Рейдер с секирой", art: svgWrap("M28 78 Q32 52 40 44 Q42 30 52 30 Q62 30 64 44 Q72 52 76 78 Q66 76 62 68 Q58 60 52 60 Q46 60 42 68 Q38 76 28 78 Z M66 34 L86 40 L82 46 L66 44 Z", "rgba(255,210,124,.32)"),
-      tell:"Справа выступ “лезвия” (секира). Плечи квадратные." },
-    { id:"cultist",  name:"Культист тумана", art: svgWrap("M30 78 Q34 54 50 40 Q66 54 70 78 Q60 76 56 70 Q52 64 50 64 Q48 64 44 70 Q40 76 30 78 Z M42 34 Q50 22 58 34 Q50 38 42 34 Z", "rgba(180,140,255,.32)"),
-      tell:"Капюшон-ромб, фигура “колоколом”, без оружия." },
-    { id:"archer",   name:"Теневой лучник",  art: svgWrap("M28 80 Q34 56 44 48 Q44 34 54 34 Q64 34 64 48 Q74 56 78 80 Q68 78 62 70 Q56 62 52 62 Q48 62 42 70 Q36 78 28 80 Z M18 40 Q28 34 34 44 Q28 54 18 48 Q22 44 18 40 Z", "rgba(124,247,255,.28)"),
-      tell:"Слева виден “лук”: дуга/выступ сбоку." },
-    { id:"knight",   name:"Падший рыцарь",   art: svgWrap("M30 82 Q32 56 38 50 Q38 30 50 26 Q62 30 62 50 Q68 56 70 82 Q60 80 58 72 Q56 64 50 64 Q44 64 42 72 Q40 80 30 82 Z M44 30 L56 30 L54 38 L46 38 Z", "rgba(255,77,109,.24)"),
-      tell:"Тяжёлый силуэт + “забрало” прямоугольником." },
-    { id:"mage",     name:"Искровой маг",    art: svgWrap("M28 80 Q34 54 50 42 Q66 54 72 80 Q64 78 60 70 Q56 62 50 62 Q44 62 40 70 Q36 78 28 80 Z M74 34 Q78 30 82 34 Q78 38 74 34 Z M78 26 Q82 22 86 26 Q82 30 78 26 Z", "rgba(180,140,255,.30)"),
-      tell:"Сверху справа две “искры” — магический след." },
-    { id:"ogre",     name:"Огр-громила",     art: svgWrap("M24 82 Q26 54 34 48 Q36 28 50 28 Q64 28 66 48 Q74 54 76 82 Q66 80 62 70 Q58 60 50 60 Q42 60 38 70 Q34 80 24 82 Z M22 54 Q18 52 20 46 Q26 46 26 52 Z M78 54 Q82 52 80 46 Q74 46 74 52 Z", "rgba(255,210,124,.24)"),
-      tell:"Очень широкий корпус + выпуклости по бокам." },
-    { id:"assassin", name:"Ночной убийца",   art: svgWrap("M34 82 Q34 60 40 52 Q42 36 50 34 Q58 36 60 52 Q66 60 66 82 Q58 80 56 72 Q54 64 50 64 Q46 64 44 72 Q42 80 34 82 Z M60 60 L82 70 L78 76 L58 68 Z", "rgba(124,247,255,.20)"),
-      tell:"Тонкий силуэт + “кинжал” справа под углом." },
-    { id:"beast",    name:"Чумная тварь",    art: svgWrap("M22 70 Q26 52 40 50 Q42 34 52 38 Q64 32 72 44 Q84 56 72 68 Q64 74 56 70 Q48 80 38 76 Q30 74 30 68 Q24 68 22 70 Z M56 34 Q58 30 62 34 Q58 38 56 34 Z", "rgba(61,255,181,.20)"),
-      tell:"Неровный “рваный” силуэт + маленькая метка-язва." },
-    { id:"boss",     name:"Вестник осады",   art: svgWrap("M26 84 Q28 56 40 48 Q42 24 50 20 Q58 24 60 48 Q72 56 74 84 Q62 82 58 74 Q54 66 50 66 Q46 66 42 74 Q38 82 26 84 Z M42 18 L50 10 L58 18 L54 22 L46 22 Z", "rgba(255,77,109,.22)"),
-      tell:"Сверху “корона/шип” — треугольный пик." },
-  ];
-
-  // ---------- DOM ----------
-  const overlay = document.getElementById('overlay');
-  const btnStart = document.getElementById('btnStart');
-
-  const enemyEl = document.getElementById('enemy');
-  const enemyArt = document.getElementById('enemyArt');
-  const enemyName = document.getElementById('enemyName');
-
-  const typeSelect = document.getElementById('typeSelect');
-  const noteInput = document.getElementById('note');
-
-  const btnSubmit = document.getElementById('btnSubmit');
-  const btnReset = document.getElementById('btnReset');
-  const btnPause = document.getElementById('btnPause');
-
-  const alarmTitle = document.getElementById('alarmTitle');
-  const alarmSub = document.getElementById('alarmSub');
-  const remainEl = document.getElementById('remain');
-  const barEl = document.getElementById('bar');
-  const hintEl = document.getElementById('hint');
-
-  const dotState = document.getElementById('dotState');
-  const stateLabel = document.getElementById('stateLabel');
-
-  const survivalEl = document.getElementById('survival');
-  const streakEl = document.getElementById('streak');
-
-  const logEl = document.getElementById('log');
-
-  const toast = document.getElementById('toast');
-  const toastText = document.getElementById('toastText');
-
-  const codexGrid = document.getElementById('codexGrid');
-
   // ---------- helpers ----------
   const pad2 = n => String(n).padStart(2,'0');
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
@@ -660,73 +565,27 @@
   function escapeHtml(s){
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   }
-  function setState(kind, label){
-    stateLabel.textContent = label;
-    dotState.classList.remove('ok','bad','pause');
-    if(kind === 'ok') dotState.classList.add('ok');
-    if(kind === 'bad') dotState.classList.add('bad');
-    if(kind === 'pause') dotState.classList.add('pause');
-  }
-  function showToast(text){
-    toastText.textContent = text;
-    toast.classList.add('show');
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(()=>toast.classList.remove('show'), 2200);
-  }
-  function addLog({ok, realType, reportedType, timeStr, note}){
-    const div = document.createElement('div');
-    div.className = 'entry';
-    div.innerHTML = `
-      <div class="entryTop">
-        <span>${timeStr}</span>
-        <span class="pill ${ok ? 'ok':'bad'}">${ok ? 'УСПЕХ' : 'ПОРАЖЕНИЕ'}</span>
-      </div>
-      <div><b>Враг:</b> ${realType}</div>
-      <div><b>Отчёт:</b> ${reportedType ?? '—'} ${note ? `<span class="muted">(${escapeHtml(note)})</span>`:''}</div>
-    `;
-    logEl.prepend(div);
-  }
 
-  // ---------- fill select + codex ----------
-  ENEMIES.forEach(e=>{
-    const opt = document.createElement('option');
-    opt.value = e.id;
-    opt.textContent = e.name;
-    typeSelect.appendChild(opt);
-  });
-
-  ENEMIES.forEach(e=>{
-    const item = document.createElement('div');
-    item.className = 'codexItem';
-    item.innerHTML = `
-      <div class="codexArt">${e.art}</div>
-      <div>
-        <div class="codexName">${e.name}</div>
-        <div class="codexText">${escapeHtml(e.tell)}</div>
-      </div>
-    `;
-    codexGrid.appendChild(item);
-  });
-
-  // ---------- FX ----------
+  // ---------- FX particles ----------
   const canvas = document.getElementById('fx');
-  const ctx = canvas.getContext('2d');
+  const ctxFx = canvas.getContext('2d');
   let W=0,H=0,DPR=1;
   function resize(){
     DPR = Math.min(2, window.devicePixelRatio || 1);
     W = canvas.clientWidth = canvas.parentElement.clientWidth;
     H = canvas.clientHeight = canvas.parentElement.clientHeight;
-    canvas.width = Math.floor(W*DPR);
-    canvas.height = Math.floor(H*DPR);
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctxFx.setTransform(DPR,0,0,DPR,0,0);
   }
   window.addEventListener('resize', resize);
 
   const particles = [];
-  function spawn(n, intensity=1){
+  function spawnParticles(n, intensity=1){
     for(let i=0;i<n;i++){
       particles.push({
-        x: Math.random()*W, y: Math.random()*H,
+        x: Math.random()*W,
+        y: Math.random()*H,
         vx: (Math.random()-.5)*0.22*intensity,
         vy: (0.12+Math.random()*0.42)*intensity,
         r: (1+Math.random()*2.4)*intensity,
@@ -736,15 +595,15 @@
       });
     }
   }
-  function pulseParticles(mult){ spawn(36, mult); }
+  function pulse(mult){ spawnParticles(34, mult); }
 
   function fxLoop(){
-    ctx.clearRect(0,0,W,H);
-    const g = ctx.createRadialGradient(W/2,H/2, 80, W/2,H/2, Math.max(W,H)*0.65);
+    ctxFx.clearRect(0,0,W,H);
+    const g = ctxFx.createRadialGradient(W/2,H/2, 80, W/2,H/2, Math.max(W,H)*0.65);
     g.addColorStop(0, 'rgba(0,0,0,0)');
     g.addColorStop(1, 'rgba(0,0,0,0.35)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,W,H);
+    ctxFx.fillStyle = g;
+    ctxFx.fillRect(0,0,W,H);
 
     for(let i=particles.length-1;i>=0;i--){
       const p = particles[i];
@@ -754,23 +613,22 @@
       if(p.x > W+10) p.x = -10;
 
       const alpha = p.a * Math.min(1, p.life/60);
-      ctx.beginPath();
-      ctx.fillStyle = `hsla(${p.hue}, 90%, 70%, ${alpha})`;
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fill();
+      ctxFx.beginPath();
+      ctxFx.fillStyle = `hsla(${p.hue}, 90%, 70%, ${alpha})`;
+      ctxFx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctxFx.fill();
 
       if(p.life <= 0) particles.splice(i,1);
     }
-
-    if(particles.length < 90 && Math.random() < 0.25) spawn(2, 1);
+    if(particles.length < 90 && Math.random() < 0.25) spawnParticles(2, 1);
     requestAnimationFrame(fxLoop);
   }
 
   resize();
-  spawn(80,1);
+  spawnParticles(80,1);
   fxLoop();
 
-  // ---------- Audio (required) ----------
+  // ---------- Audio (MANDATORY) ----------
   const audio = (() => {
     let ctx=null, master=null, musicGain=null, stepGain=null;
     let running=false;
@@ -900,7 +758,9 @@
     function setFootsteps(on){
       footstepsOn = on;
       if(!ctx) return;
-      stepGain.gain.setTargetAtTime(on ? (0.22 * intensity) : 0.0, ctx.currentTime, 0.08);
+      // VERY QUIET footsteps by default:
+      const target = on ? (0.10 * intensity) : 0.0;
+      stepGain.gain.setTargetAtTime(target, ctx.currentTime, 0.10);
 
       if(on){
         if(!stepNoise) startFootsteps();
@@ -918,11 +778,11 @@
       if(!ctx) return;
       musicGain.gain.setTargetAtTime(0.35 * intensity, ctx.currentTime, 0.12);
       if(footstepsOn){
-        stepGain.gain.setTargetAtTime(0.22 * intensity, ctx.currentTime, 0.12);
+        stepGain.gain.setTargetAtTime(0.10 * intensity, ctx.currentTime, 0.12);
       }
     }
 
-    function horn(loud){
+    function horn(){
       if(!ctx) return;
       const t0 = ctx.currentTime;
       const g = ctx.createGain();
@@ -952,7 +812,7 @@
       o2.frequency.exponentialRampToValueAtTime(base*1.72, t0+0.45);
       o3.frequency.exponentialRampToValueAtTime(base*2.6, t0+0.45);
 
-      const vol = loud ? 0.55 : 0.18;
+      const vol = 0.52;
       g.gain.setValueAtTime(0.0, t0);
       g.gain.linearRampToValueAtTime(vol, t0+0.03);
       g.gain.exponentialRampToValueAtTime(0.001, t0+0.75);
@@ -974,16 +834,191 @@
     return { start, setFootsteps, setIntensity, horn };
   })();
 
-  // ---------- Game ----------
+  // ---------- Enemy set: VERY similar silhouettes ----------
+  // Base body + tiny "mark" differences
+  function svgEnemy(markInner){
+    return `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(255,255,255,.14)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,.04)"/>
+          </linearGradient>
+          <filter id="sh" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.2" result="b"/>
+            <feColorMatrix in="b" type="matrix"
+              values="0 0 0 0 0
+                      0 0 0 0 0
+                      0 0 0 0 0
+                      0 0 0 0.55 0"/>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <circle cx="50" cy="50" r="46" fill="rgba(124,247,255,.20)" opacity="0.35"/>
+        <circle cx="50" cy="50" r="44" fill="rgba(0,0,0,.24)" stroke="rgba(255,255,255,.12)"/>
+
+        <g filter="url(#sh)">
+          <!-- base silhouette (almost identical for all) -->
+          <path d="M32 82
+                   Q34 60 40 52
+                   Q41 36 50 32
+                   Q59 36 60 52
+                   Q66 60 68 82
+                   Q60 80 58 72
+                   Q56 64 50 64
+                   Q44 64 42 72
+                   Q40 80 32 82 Z"
+                fill="url(#s)" stroke="rgba(255,255,255,.10)" stroke-width="1.2"/>
+          <!-- tiny visor -->
+          <path d="M44 34 L56 34 L54 42 L46 42 Z"
+                fill="rgba(0,0,0,.22)" stroke="rgba(255,255,255,.08)" stroke-width="1.0"/>
+
+          <!-- micro mark (difference) -->
+          ${markInner}
+        </g>
+      </svg>
+    `;
+  }
+
+  const ENEMIES = [
+    { id:"t1", label:"Тип 1", art: svgEnemy(`<path d="M50 20 L53 24 L50 26 L47 24 Z" fill="rgba(255,255,255,.12)"/>`),
+      tell:"Тип 1: микрошип сверху по центру (маленький ромб)." },
+    { id:"t2", label:"Тип 2", art: svgEnemy(`<path d="M64 48 L78 54 L76 58 L62 52 Z" fill="rgba(255,255,255,.10)"/>`),
+      tell:"Тип 2: крошечный выступ справа на уровне плеча." },
+    { id:"t3", label:"Тип 3", art: svgEnemy(`<path d="M36 48 L22 54 L24 58 L38 52 Z" fill="rgba(255,255,255,.10)"/>`),
+      tell:"Тип 3: крошечный выступ слева на уровне плеча." },
+    { id:"t4", label:"Тип 4", art: svgEnemy(`<path d="M58 44 L62 50" stroke="rgba(255,255,255,.14)" stroke-width="2" stroke-linecap="round"/>`),
+      tell:"Тип 4: тонкая насечка справа (короткая линия)." },
+    { id:"t5", label:"Тип 5", art: svgEnemy(`<path d="M42 44 L38 50" stroke="rgba(255,255,255,.14)" stroke-width="2" stroke-linecap="round"/>`),
+      tell:"Тип 5: тонкая насечка слева (короткая линия)." },
+    { id:"t6", label:"Тип 6", art: svgEnemy(`<circle cx="74" cy="26" r="2.0" fill="rgba(255,255,255,.13)"/>`),
+      tell:"Тип 6: одна точка справа сверху (как искра)." },
+    { id:"t7", label:"Тип 7", art: svgEnemy(`<circle cx="26" cy="26" r="2.0" fill="rgba(255,255,255,.13)"/>`),
+      tell:"Тип 7: одна точка слева сверху." },
+    { id:"t8", label:"Тип 8", art: svgEnemy(`<path d="M50 66 L64 74 L62 78 L48 70 Z" fill="rgba(255,255,255,.09)"/>`),
+      tell:"Тип 8: тонкий клин справа снизу (почти незаметный)." },
+    { id:"t9", label:"Тип 9", art: svgEnemy(`<path d="M50 66 L36 74 L38 78 L52 70 Z" fill="rgba(255,255,255,.09)"/>`),
+      tell:"Тип 9: тонкий клин слева снизу." },
+    { id:"t10", label:"Тип 10", art: svgEnemy(`<path d="M50 28 L52 30 L50 31 L48 30 Z" fill="rgba(255,255,255,.12)"/>`),
+      tell:"Тип 10: микрометка на лбу (очень маленький ромб чуть ниже верха)." },
+  ];
+
+  // ---------- DOM ----------
+  const overlay = document.getElementById('overlay');
+  const btnStart = document.getElementById('btnStart');
+
+  const enemyEl = document.getElementById('enemy');
+  const enemyArt = document.getElementById('enemyArt');
+
+  const typeSelect = document.getElementById('typeSelect');
+  const noteInput = document.getElementById('note');
+
+  const btnSubmit = document.getElementById('btnSubmit');
+  const btnReset = document.getElementById('btnReset');
+  const btnPause = document.getElementById('btnPause');
+
+  const alarmTitle = document.getElementById('alarmTitle');
+  const alarmSub = document.getElementById('alarmSub');
+  const remainEl = document.getElementById('remain');
+  const barEl = document.getElementById('bar');
+  const hintEl = document.getElementById('hint');
+
+  const dotState = document.getElementById('dotState');
+  const stateLabel = document.getElementById('stateLabel');
+
+  const survivalEl = document.getElementById('survival');
+  const streakEl = document.getElementById('streak');
+
+  const logEl = document.getElementById('log');
+  const toast = document.getElementById('toast');
+  const toastText = document.getElementById('toastText');
+
+  const codexGrid = document.getElementById('codexGrid');
+
+  function setState(kind, label){
+    stateLabel.textContent = label;
+    dotState.classList.remove('ok','bad','pause');
+    if(kind === 'ok') dotState.classList.add('ok');
+    if(kind === 'bad') dotState.classList.add('bad');
+    if(kind === 'pause') dotState.classList.add('pause');
+  }
+  function showToast(text){
+    toastText.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toast.classList.remove('show'), 2200);
+  }
+  function addLog({ok, realTypeLabel, reportedLabel, timeStr, note}){
+    const div = document.createElement('div');
+    div.className = 'entry';
+    div.innerHTML = `
+      <div class="entryTop">
+        <span>${escapeHtml(timeStr)}</span>
+        <span class="pill ${ok ? 'ok':'bad'}">${ok ? 'УСПЕХ' : 'ПОРАЖЕНИЕ'}</span>
+      </div>
+      <div><b>Враг:</b> ${escapeHtml(realTypeLabel)}</div>
+      <div><b>Отчёт:</b> ${escapeHtml(reportedLabel ?? '—')} ${note ? `<span class="muted">(${escapeHtml(note)})</span>`:''}</div>
+    `;
+    logEl.prepend(div);
+  }
+
+  // Fill select + codex (TYPE NUMBERS are here = instruction)
+  ENEMIES.forEach((e, idx)=>{
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = `${idx+1}. ${e.label}`;
+    typeSelect.appendChild(opt);
+  });
+
+  ENEMIES.forEach((e, idx)=>{
+    const item = document.createElement('div');
+    item.className = 'codexItem';
+    item.innerHTML = `
+      <div class="codexArt">${e.art}</div>
+      <div>
+        <div class="codexName">Тип ${idx+1}</div>
+        <div class="codexText">${escapeHtml(e.tell)}</div>
+      </div>
+    `;
+    codexGrid.appendChild(item);
+  });
+
+  // ---------- Game state (dt-based) ----------
   const GAME = {
-    started:false, running:false, paused:false, hiddenPause:false,
-    survivalMs:0, streak:0,
-    waveActive:false, waveRemainingMs:0, horned:false,
-    reportedType:null, currentEnemy:null,
-    spawnRemainingMs:0 // hidden, never shown
+    started:false,
+    running:false,
+    paused:false,
+    hiddenPause:false,
+
+    survivalMs: 0,
+    streak: 0,
+
+    waveActive:false,
+    waveRemainingMs: 0,
+    horned:false,
+    reportedType:null,
+    currentEnemy:null,
+
+    spawnRemainingMs: 0
   };
 
-  function scheduleNextSpawn(){ GAME.spawnRemainingMs = rndInt(30_000, 180_000); }
+  function scheduleNextSpawn(){
+    GAME.spawnRemainingMs = rndInt(30_000, 180_000);
+  }
+
+  function resetUIToIdle(){
+    enemyEl.classList.remove('active');
+    enemyArt.innerHTML = '';
+
+    alarmTitle.textContent = 'Тишина на тракте';
+    alarmSub.textContent = 'Время до появления скрыто.';
+    hintEl.textContent = 'Жди контакта';
+    remainEl.textContent = '—';
+    barEl.style.width = '0%';
+
+    setState('ok','Тишина');
+  }
 
   function resetGame(){
     GAME.running = true;
@@ -1000,21 +1035,13 @@
     GAME.reportedType = null;
     GAME.currentEnemy = null;
 
-    enemyEl.classList.remove('active');
-    enemyArt.innerHTML = '';
-    enemyName.textContent = 'Враг';
-
     logEl.innerHTML = '';
-
-    alarmTitle.textContent = 'Тишина на тракте';
-    alarmSub.textContent = 'Время до появления скрыто.';
-    hintEl.textContent = 'Жди контакта';
-    remainEl.textContent = '—';
-    barEl.style.width = '0%';
-
-    setState('ok','Тишина');
     noteInput.value = '';
     typeSelect.selectedIndex = 0;
+
+    resetUIToIdle();
+    audio.setFootsteps(false);
+    audio.setIntensity(1.0);
 
     scheduleNextSpawn();
     showToast('Пост начат.');
@@ -1028,31 +1055,39 @@
 
     GAME.currentEnemy = pick(ENEMIES);
     enemyArt.innerHTML = GAME.currentEnemy.art;
-    enemyName.textContent = GAME.currentEnemy.name;
 
     enemyEl.classList.remove('active');
     void enemyEl.offsetWidth;
     enemyEl.classList.add('active');
 
-    alarmTitle.textContent = 'Тревога: враг идёт на замок!';
-    alarmSub.textContent = '20 секунд: выбери тип, подай отчёт. Потом — ПРОБЕЛ (горн).';
-    hintEl.textContent = 'Сначала отчёт → потом ПРОБЕЛ.';
+    alarmTitle.textContent = 'Тревога!';
+    alarmSub.textContent = 'За 20 секунд: выбрать тип → «Подать отчёт» → ПРОБЕЛ (горн).';
+    hintEl.textContent = 'Сначала отчёт, потом горн.';
     setState('bad','Тревога');
 
-    audio.setFootsteps(true);
-    showToast('Контакт! Распознай силуэт.');
-    pulseParticles(1.15);
+    audio.setFootsteps(true); // quiet steps
+    showToast('Контакт. Смотри силуэт.');
+    pulse(1.15);
   }
 
   function endWave(ok, reason){
     const timeStr = `⏱️ ${fmtTime(GAME.survivalMs)}`;
-    const realType = GAME.currentEnemy ? GAME.currentEnemy.name : '—';
-    const rep = ENEMIES.find(x=>x.id === GAME.reportedType);
-    const reportedType = rep ? rep.name : null;
+    const realIdx = GAME.currentEnemy ? ENEMIES.findIndex(x=>x.id === GAME.currentEnemy.id) : -1;
+    const repIdx  = GAME.reportedType ? ENEMIES.findIndex(x=>x.id === GAME.reportedType) : -1;
 
-    addLog({ ok, realType, reportedType, timeStr, note: noteInput.value.trim() });
+    const realLabel = realIdx >= 0 ? `Тип ${realIdx+1}` : '—';
+    const repLabel  = repIdx  >= 0 ? `Тип ${repIdx+1}`  : null;
+
+    addLog({
+      ok,
+      realTypeLabel: realLabel,
+      reportedLabel: repLabel,
+      timeStr,
+      note: noteInput.value.trim()
+    });
 
     enemyEl.classList.remove('active');
+    enemyArt.innerHTML = '';
     audio.setFootsteps(false);
 
     GAME.waveActive = false;
@@ -1067,34 +1102,31 @@
     if(ok){
       GAME.streak++;
       streakEl.textContent = String(GAME.streak);
-      alarmTitle.textContent = 'Пост удержан';
-      alarmSub.textContent = 'Время до появления скрыто.';
-      hintEl.textContent = 'Смотри тракт.';
-      setState('ok','Тишина');
+      resetUIToIdle();
       showToast(`Успех: ${reason}`);
       scheduleNextSpawn();
     } else {
       GAME.running = false;
       alarmTitle.textContent = 'ПОРАЖЕНИЕ';
-      alarmSub.textContent = reason + ' Нажми «Перезапуск».';
-      hintEl.textContent = 'Перезапуск справа.';
+      alarmSub.textContent = `${reason} Нажми «Перезапуск».`;
+      hintEl.textContent = 'Перезапусти игру.';
       setState('bad','Провал');
       showToast('Провал.');
-      pulseParticles(1.6);
+      pulse(1.6);
     }
   }
 
   function validateAndFinishByHorn(){
     if(!GAME.reportedType) return endWave(false, 'Горн без отчёта.');
-    if(!GAME.currentEnemy || GAME.reportedType !== GAME.currentEnemy.id) return endWave(false, 'Неверный тип врага в отчёте.');
-    endWave(true, 'Тревога закрыта верно.');
+    if(!GAME.currentEnemy || GAME.reportedType !== GAME.currentEnemy.id) return endWave(false, 'Неверный тип в отчёте.');
+    return endWave(true, 'Тревога закрыта верно.');
   }
 
   function togglePause(){
     if(!GAME.started) return;
     if(!GAME.running){ showToast('Поражение. Перезапусти.'); return; }
-    GAME.paused = !GAME.paused;
 
+    GAME.paused = !GAME.paused;
     if(GAME.paused){
       audio.setFootsteps(false);
       audio.setIntensity(0.25);
@@ -1106,22 +1138,22 @@
       audio.setIntensity(1.0);
       if(GAME.waveActive) audio.setFootsteps(true);
       setState(GAME.waveActive ? 'bad' : 'ok', GAME.waveActive ? 'Тревога' : 'Тишина');
-      alarmSub.textContent = GAME.waveActive ? '20 секунд: выбери тип, подай отчёт. Потом — ПРОБЕЛ (горн).' : 'Время до появления скрыто.';
-      hintEl.textContent = GAME.waveActive ? 'Сначала отчёт → потом ПРОБЕЛ.' : 'Жди контакта';
+      alarmSub.textContent = GAME.waveActive ? 'За 20 секунд: выбрать тип → «Подать отчёт» → ПРОБЕЛ (горн).' : 'Время до появления скрыто.';
+      hintEl.textContent = GAME.waveActive ? 'Сначала отчёт, потом горн.' : 'Жди контакта';
       showToast('Продолжаем.');
     }
   }
 
-  // controls
+  // Controls
   btnSubmit.addEventListener('click', () => {
     if(!GAME.started) return;
     if(!GAME.running){ showToast('Поражение. Перезапусти.'); return; }
     if(GAME.paused || GAME.hiddenPause){ showToast('Пауза.'); return; }
     if(!GAME.waveActive){ showToast('Тревоги нет.'); return; }
-    if(GAME.waveRemainingMs <= 0) return endWave(false, 'Отчёт слишком поздно.');
 
+    if(GAME.waveRemainingMs <= 0) return endWave(false, 'Отчёт слишком поздно.');
     GAME.reportedType = typeSelect.value;
-    hintEl.textContent = 'Отчёт принят. Теперь ПРОБЕЛ (горн).';
+    hintEl.textContent = 'Отчёт принят. Теперь ПРОБЕЛ.';
     showToast('Отчёт принят.');
   });
 
@@ -1133,7 +1165,11 @@
   btnPause.addEventListener('click', togglePause);
 
   window.addEventListener('keydown', (e) => {
-    if(e.code === 'KeyP'){ e.preventDefault(); togglePause(); return; }
+    if(e.code === 'KeyP'){
+      e.preventDefault();
+      togglePause();
+      return;
+    }
     if(e.code !== 'Space') return;
     e.preventDefault();
 
@@ -1141,24 +1177,18 @@
     if(!GAME.running){ showToast('Поражение. Перезапусти.'); return; }
     if(GAME.paused || GAME.hiddenPause){ showToast('Пауза.'); return; }
 
-    if(!GAME.waveActive){
-      audio.horn(false);
-      showToast('Горн без тревоги.');
-      return;
-    }
+    // horn always plays, but rules decide win/lose
+    audio.horn();
+    pulse(1.25);
 
-    if(GAME.waveRemainingMs <= 0){
-      audio.horn(true);
-      endWave(false, 'Горн слишком поздно.');
-      return;
-    }
+    if(!GAME.waveActive) return endWave(false, 'Горн без тревоги.');
+    if(GAME.waveRemainingMs <= 0) return endWave(false, 'Горн слишком поздно.');
 
     GAME.horned = true;
-    audio.horn(true);
-    pulseParticles(1.25);
     validateAndFinishByHorn();
   });
 
+  // Stop time when tab hidden
   document.addEventListener('visibilitychange', () => {
     GAME.hiddenPause = document.hidden;
     if(GAME.hiddenPause){
@@ -1173,14 +1203,14 @@
       audio.setIntensity(GAME.paused ? 0.25 : 1.0);
       if(!GAME.paused && GAME.running){
         setState(GAME.waveActive ? 'bad' : 'ok', GAME.waveActive ? 'Тревога' : 'Тишина');
-        alarmSub.textContent = GAME.waveActive ? '20 секунд: выбери тип, подай отчёт. Потом — ПРОБЕЛ (горн).' : 'Время до появления скрыто.';
-        hintEl.textContent = GAME.waveActive ? 'Сначала отчёт → потом ПРОБЕЛ.' : 'Жди контакта';
+        alarmSub.textContent = GAME.waveActive ? 'За 20 секунд: выбрать тип → «Подать отчёт» → ПРОБЕЛ (горн).' : 'Время до появления скрыто.';
+        hintEl.textContent = GAME.waveActive ? 'Сначала отчёт, потом горн.' : 'Жди контакта';
         if(GAME.waveActive) audio.setFootsteps(true);
       }
     }
   });
 
-  // main loop (NO waiting hints)
+  // Main loop (no spawn hint)
   let last = performance.now();
   function loop(ts){
     const dt = Math.min(60, ts - last);
@@ -1198,12 +1228,12 @@
         if(GAME.spawnRemainingMs <= 0) startWave();
       } else {
         GAME.waveRemainingMs -= dt;
-
         remainEl.textContent = fmtTime(GAME.waveRemainingMs);
         const p = clamp(1 - (GAME.waveRemainingMs / 20_000), 0, 1);
         barEl.style.width = (p * 100).toFixed(1) + '%';
 
         if(GAME.waveRemainingMs <= 0){
+          // if any step missing or wrong -> lose
           if(!GAME.reportedType) endWave(false, 'Время вышло: отчёт не подан.');
           else if(GAME.reportedType !== GAME.currentEnemy.id) endWave(false, 'Время вышло: отчёт неверный.');
           else if(!GAME.horned) endWave(false, 'Время вышло: горн не прозвучал.');
@@ -1212,13 +1242,15 @@
       }
     }
 
-    survivalEl.textContent = fmtTime(GAME.survivalMs);
+    if(GAME.started){
+      survivalEl.textContent = fmtTime(GAME.survivalMs);
+    }
     requestAnimationFrame(loop);
   }
 
-  // start button
+  // Start
   btnStart.addEventListener('click', async () => {
-    await audio.start();               // must be in user gesture
+    await audio.start(); // required user gesture
     overlay.style.display = 'none';
 
     GAME.started = true;
